@@ -7,6 +7,11 @@
 *.userosscache
 *.sln.docstates
 
+#Qt generated files
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
