@@ -1,9 +1,10 @@
 #pragma once
 
-enum class StatusBar : int {
-	Id = 100,
-	NumParts = 2
-};
+namespace StatusBar
+{
+	static constexpr int Id = 100;
+	static constexpr int NumParts = 2;
+}
 
 inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int cParts)
 {

@@ -7,8 +7,8 @@ class Datagram {
 	static constexpr int CRC_SIZE = 4;
 public:
 	Datagram(char* data);
-	//Datagram(const Datagram& dgram);
-	//virtual ~Datagram();
+	Datagram(const Datagram& dgram);
+	virtual ~Datagram();
 
 	char* computeCRC(const char* data);
 

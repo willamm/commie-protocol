@@ -145,6 +145,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ControlFrame.h" />
     <ClInclude Include="Datagram.h" />
     <ClInclude Include="OpenFile.h" />
     <ClInclude Include="PTTPTerminal.h" />
