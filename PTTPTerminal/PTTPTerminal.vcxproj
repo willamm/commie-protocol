@@ -146,7 +146,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ControlFrame.h" />
-    <ClInclude Include="Datagram.h" />
+    <ClInclude Include="DataFrame.h" />
     <ClInclude Include="OpenFile.h" />
     <ClInclude Include="PTTPTerminal.h" />
     <ClInclude Include="resource.h" />
@@ -156,7 +156,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Datagram.cpp" />
+    <ClCompile Include="DataFrame.cpp" />
     <ClCompile Include="PTTPTerminal.cpp" />
     <ClCompile Include="SerialPort.cpp" />
     <ClCompile Include="stdafx.cpp">

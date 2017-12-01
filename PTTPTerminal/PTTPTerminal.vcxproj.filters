@@ -30,9 +30,6 @@
     <ClInclude Include="PTTPTerminal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Datagram.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SerialPort.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -45,6 +42,9 @@
     <ClInclude Include="ControlFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DataFrame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -53,10 +53,10 @@
     <ClCompile Include="PTTPTerminal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Datagram.cpp">
+    <ClCompile Include="SerialPort.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SerialPort.cpp">
+    <ClCompile Include="DataFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

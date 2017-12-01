@@ -57,3 +57,23 @@ inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int 
 	LocalFree(hloc);
 	return hwndStatus;
 }
+
+
+inline int ResizeStatusBar(HWND* hSb)
+{
+	// refactor this
+	RECT rcClient;
+	GetClientRect(*hSb, &rcClient);
+	const int nWidth = rcClient.right / StatusBar::NumParts;
+	int rightEdge = nWidth;
+	const int cParts = StatusBar::NumParts;
+	int paParts[StatusBar::NumParts];
+	for (int i = 0; i < cParts; i++) {
+		paParts[i] = rightEdge;
+		rightEdge += nWidth;
+	}
+	SendMessage(*hSb, SB_SETPARTS, StatusBar::NumParts, (LPARAM)paParts);
+	SendMessage(*hSb, WM_SIZE, 0, 0);
+	return 0;
+	return 0;
+}
