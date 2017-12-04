@@ -3,9 +3,12 @@
 // PTTP: Power to the Protocolariat 
 // Definition of a PTTP packet
 class DataFrame {
+	
+public:
 	static constexpr int DATA_SIZE = 512;
 	static constexpr int CRC_SIZE = 4;
-public:
+	static constexpr int FRAME_SIZE = DATA_SIZE + CRC_SIZE + 2;
+
 	DataFrame(char* data);
 	DataFrame(const DataFrame& dgram);
 	virtual ~DataFrame();

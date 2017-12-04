@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-inline void WINAPI InitFileStruct(LPOPENFILENAME _Out_ lpOfn, HWND parent, LPWSTR fileName)
+inline void InitFileStruct(LPOPENFILENAME _Out_ lpOfn, HWND parent, LPWSTR fileName)
 {
 	ZeroMemory(lpOfn, sizeof(lpOfn));
 	fileName[0] = '\0';

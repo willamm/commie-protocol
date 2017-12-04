@@ -6,13 +6,33 @@ namespace StatusBar
 	static constexpr int NumParts = 2;
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: CreateStatusBar
+--
+-- DATE: December 1, 2017
+--
+-- REVISIONS:
+--
+-- DESIGNER: Will Murphy
+--
+-- PROGRAMMER: Will Murphy
+--
+-- INTERFACE: HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int cParts)
+--								HWND hwndParent: The parent window.
+--								int idStatus: The ID of the status bar.
+--								HINSTANCE hinst: The application instance.
+--								int cParts: The number of parts the status bar has.
+--
+-- RETURNS: Returns a handle to the status bar window, whose parent is the application window.
+--
+----------------------------------------------------------------------------------------------------------------------*/
 inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int cParts)
 {
 	HWND hwndStatus;
 	RECT rcClient;
 	HLOCAL hloc;
 	PINT paParts;
-	int i, nWidth;
+	int nWidth;
 
 	INITCOMMONCONTROLSEX ix;
 	ix.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -44,13 +64,14 @@ inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int 
 	// copy the coordinates to the array.
 	nWidth = rcClient.right / cParts;
 	int rightEdge = nWidth;
-	for (i = 0; i < cParts; i++) {
+	for (int i = 0; i < cParts; i++) {
 		paParts[i] = rightEdge;
 		rightEdge += nWidth;
 	}
 
 	// Tell the status bar to create the window parts.
 	SendMessage(hwndStatus, SB_SETPARTS, (WPARAM)cParts, (LPARAM)paParts);
+	//SendMessage(hwndStatus, WM_SIZE, 0, 0);
 	
 	// Free the array, and return.
 	LocalUnlock(hloc);
@@ -61,19 +82,17 @@ inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int 
 
 inline int ResizeStatusBar(HWND* hSb)
 {
-	// refactor this
 	RECT rcClient;
 	GetClientRect(*hSb, &rcClient);
 	const int nWidth = rcClient.right / StatusBar::NumParts;
 	int rightEdge = nWidth;
 	const int cParts = StatusBar::NumParts;
-	int paParts[StatusBar::NumParts];
+	int paParts[cParts];
 	for (int i = 0; i < cParts; i++) {
 		paParts[i] = rightEdge;
 		rightEdge += nWidth;
 	}
-	SendMessage(*hSb, SB_SETPARTS, StatusBar::NumParts, (LPARAM)paParts);
+	SendMessage(*hSb, SB_SETPARTS, cParts, (LPARAM)paParts);
 	SendMessage(*hSb, WM_SIZE, 0, 0);
-	return 0;
 	return 0;
 }

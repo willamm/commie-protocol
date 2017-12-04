@@ -30,9 +30,6 @@
     <ClInclude Include="PTTPTerminal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SerialPort.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="OpenFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -45,15 +42,15 @@
     <ClInclude Include="DataFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SerialPortConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PTTPTerminal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SerialPort.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DataFrame.cpp">
