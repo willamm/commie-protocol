@@ -9,4 +9,6 @@ class Console : public QPlainTextEdit
 public:
 	Console(QWidget* parent = nullptr);
 	virtual ~Console();
+
+	void putData(const QByteArray& text);
 };

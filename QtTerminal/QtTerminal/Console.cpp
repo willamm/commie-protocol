@@ -3,6 +3,7 @@
 Console::Console(QWidget *parent)
 	: QPlainTextEdit(parent)
 {
+	setReadOnly(true);
 	QPalette p = palette();
 	p.setColor(QPalette::Base, Qt::black);
 	p.setColor(QPalette::Text, Qt::green);
@@ -11,4 +12,10 @@ Console::Console(QWidget *parent)
 
 Console::~Console()
 {
+}
+
+
+void Console::putData(const QByteArray& text)
+{
+	setPlainText(QString(text));
 }
