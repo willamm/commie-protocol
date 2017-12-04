@@ -10,7 +10,7 @@ public:
 	static constexpr int FRAME_SIZE = DATA_SIZE + CRC_SIZE + 2;
 
 	DataFrame(char* data);
-	DataFrame(const DataFrame& dgram);
+	DataFrame(const DataFrame& dframe);
 	virtual ~DataFrame();
 
 	char* computeCRC(const char* data);

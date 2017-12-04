@@ -68,9 +68,11 @@ inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int 
 	// Tell the status bar to create the window parts.
 	SendMessage(hwndStatus, SB_SETPARTS, (WPARAM)cParts, (LPARAM)paParts);
 
-	// Set the text
-	WPARAM text = MAKEWPARAM(0, 0);
-	SendMessage(hwndStatus, SB_SETTEXT, text, (LPARAM)L"Packets Sent: ");
+	// Set the text.
+	// Might have to replace this to keep track of the number of packets sent 
+	// from the main window.
+	WPARAM packets = MAKEWPARAM(0, 0);
+	SendMessage(hwndStatus, SB_SETTEXT, packets, (LPARAM)L"Packets Sent: ");
 	
 	// Free the array, and return.
 	LocalUnlock(hloc);
