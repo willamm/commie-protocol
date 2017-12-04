@@ -1,4 +1,5 @@
 #pragma once
+#include <Commctrl.h>
 
 namespace StatusBar
 {
@@ -28,12 +29,6 @@ namespace StatusBar
 ----------------------------------------------------------------------------------------------------------------------*/
 inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int cParts)
 {
-	HWND hwndStatus;
-	RECT rcClient;
-	HLOCAL hloc;
-	PINT paParts;
-	int nWidth;
-
 	INITCOMMONCONTROLSEX ix;
 	ix.dwSize = sizeof(INITCOMMONCONTROLSEX);
 	ix.dwICC = ICC_WIN95_CLASSES;
@@ -41,7 +36,7 @@ inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int 
 	InitCommonControlsEx(&ix);
 
 	// Create the status bar.
-	hwndStatus = CreateWindowEx(
+	HWND hwndStatus = CreateWindowEx(
 		0,                       // no extended styles
 		STATUSCLASSNAME,         // name of status bar class
 		(PCTSTR)NULL,           // no text when first created
@@ -54,15 +49,16 @@ inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int 
 		NULL);                   // no window creation data
 
 								 // Get the coordinates of the parent window's client area.
+	RECT rcClient;
 	GetClientRect(hwndParent, &rcClient);
 
 	// Allocate an array for holding the right edge coordinates.
-	hloc = LocalAlloc(LHND, sizeof(int) * cParts);
-	paParts = (PINT)LocalLock(hloc);
+	HLOCAL hloc = LocalAlloc(LHND, sizeof(int) * cParts);
+	PINT paParts = (PINT)LocalLock(hloc);
 
 	// Calculate the right edge coordinate for each part, and
 	// copy the coordinates to the array.
-	nWidth = rcClient.right / cParts;
+	int nWidth = rcClient.right / cParts;
 	int rightEdge = nWidth;
 	for (int i = 0; i < cParts; i++) {
 		paParts[i] = rightEdge;
@@ -71,7 +67,10 @@ inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int 
 
 	// Tell the status bar to create the window parts.
 	SendMessage(hwndStatus, SB_SETPARTS, (WPARAM)cParts, (LPARAM)paParts);
-	//SendMessage(hwndStatus, WM_SIZE, 0, 0);
+
+	// Set the text
+	WPARAM text = MAKEWPARAM(0, 0);
+	SendMessage(hwndStatus, SB_SETTEXT, text, (LPARAM)L"Packets Sent: ");
 	
 	// Free the array, and return.
 	LocalUnlock(hloc);
@@ -79,8 +78,24 @@ inline HWND CreateStatusBar(HWND hwndParent, int idStatus, HINSTANCE hinst, int 
 	return hwndStatus;
 }
 
-
-inline int ResizeStatusBar(HWND* hSb)
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: ResizeStatusBar
+--
+-- DATE : December 1, 2017
+--
+-- REVISIONS :
+--
+-- DESIGNER : Will Murphy
+--
+-- PROGRAMMER : Will Murphy
+--
+-- INTERFACE : void ResizeStatusBar(HWND* hSb)
+--			HWND* hSb : A pointer to the status bar handle.
+--								
+-- RETURNS : None.
+--
+----------------------------------------------------------------------------------------------------------------------*/
+inline void ResizeStatusBar(HWND* hSb)
 {
 	RECT rcClient;
 	GetClientRect(*hSb, &rcClient);
@@ -94,5 +109,4 @@ inline int ResizeStatusBar(HWND* hSb)
 	}
 	SendMessage(*hSb, SB_SETPARTS, cParts, (LPARAM)paParts);
 	SendMessage(*hSb, WM_SIZE, 0, 0);
-	return 0;
 }
