@@ -9,6 +9,7 @@ QtTerminal::QtTerminal(QWidget *parent)
 	setCentralWidget(&console);
 	initActionConnections();
 	addAvailablePorts();
+	ui.actionConnect->setEnabled(false);
 }
 
 void QtTerminal::initActionConnections()
@@ -16,6 +17,15 @@ void QtTerminal::initActionConnections()
 	// Opens QDialog to send file when Send File button is clicked
 	connect(ui.actionSend_File, &QAction::triggered, this, &QtTerminal::openFileDialog);
 	connect(this, &QtTerminal::fileSelected, this, &QtTerminal::readFile);
+	connect(ui.actionConnect, &QAction::triggered, this, [this]()
+	{
+		if (port.open(QIODevice::ReadWrite))
+		{
+			ui.statusBar->showMessage("Connected", 1000);
+			ui.actionConnect->setEnabled(false);
+			ui.actionDisconnect->setEnabled(true);
+		}
+	});
 }
 
 void QtTerminal::initSerialPort(QAction* triggeredPortName)
@@ -25,11 +35,12 @@ void QtTerminal::initSerialPort(QAction* triggeredPortName)
 	if (!portName.isEmpty())
 	{
 		port.setPortName(portName);
+		port.setBaudRate(QSerialPort::Baud9600);
+		port.setDataBits(QSerialPort::Data8);
+		port.setParity(QSerialPort::NoParity);
+		port.setStopBits(QSerialPort::OneStop);
+		ui.actionConnect->setEnabled(true);
 	}
-	port.setBaudRate(QSerialPort::Baud9600);
-	port.setDataBits(QSerialPort::Data8);
-	port.setParity(QSerialPort::NoParity);
-	port.setStopBits(QSerialPort::OneStop);
 }
 
 void QtTerminal::addAvailablePorts()
@@ -56,6 +67,10 @@ void QtTerminal::readFile()
 	if (!sendFileName.isEmpty())
 	{
 		std::ifstream file(sendFileName.toStdString());
-		console.putData(sendFileName.toLocal8Bit());
+		if (file.is_open())
+		{
+			std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
+			console.putData(QString::fromStdString(content).toLocal8Bit());
+		}
 	}
 }

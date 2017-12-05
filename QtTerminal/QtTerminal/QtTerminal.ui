@@ -45,6 +45,8 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionSend_File"/>
+   <addaction name="actionConnect"/>
+   <addaction name="actionDisconnect"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
@@ -63,6 +65,16 @@
   <action name="actionSelect_Port">
    <property name="text">
     <string>Select Port</string>
+   </property>
+  </action>
+  <action name="actionConnect">
+   <property name="text">
+    <string>Connect</string>
+   </property>
+  </action>
+  <action name="actionDisconnect">
+   <property name="text">
+    <string>Disconnect</string>
    </property>
   </action>
  </widget>
