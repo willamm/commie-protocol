@@ -1,0 +1,65 @@
+[33mcommit 4e5646be552b73ae1eda137978c0ad273f44b4e6[m[33m ([m[1;36mHEAD -> [m[1;32mcrc[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmaster[m[33m)[m
+Author: mac craig <maccraig98@gmail.com>
+Date:   Mon Dec 4 13:29:27 2017 -0800
+
+    Add documentation pdf v1
+
+[33mcommit 646455ce57fd54b55e5bb10f728ef678972187d4[m
+Author: William Murphy <will.murphy1994@gmail.com>
+Date:   Mon Dec 4 12:40:27 2017 -0800
+
+    Initial setup of Qt version of project
+
+[33mcommit 1113486d670660521e7c980432f51ff2e48baab0[m[33m ([m[1;31morigin/crc[m[33m)[m
+Author: William Murphy <will.murphy1994@gmail.com>
+Date:   Sun Dec 3 21:49:26 2017 -0800
+
+    minor changes
+
+[33mcommit 10f0ca6dd32dd9ba2e11a40a453c1d7722952d2b[m
+Author: William Murphy <will.murphy1994@gmail.com>
+Date:   Sun Dec 3 20:22:09 2017 -0800
+
+    Add comment ResizeStatusBar
+
+[33mcommit e464628dd4ec7c85a5b85a731c607601256bd544[m
+Author: William Murphy <will.murphy1994@gmail.com>
+Date:   Sun Dec 3 19:45:38 2017 -0800
+
+    Refactor serial port config into separate file.
+
+[33mcommit f11f114b319410d4cd03db6d9c50841de7147fb7[m
+Author: William Murphy <will.murphy1994@gmail.com>
+Date:   Fri Dec 1 11:11:46 2017 -0800
+
+    Refactor WM_SIZE message response in WndProc to be a function.
+
+[33mcommit d4a1ebd9f2a3b909614fc6c8b15c8c198f6f1df8[m[33m ([m[1;31morigin/control-frame-impl[m[33m)[m
+Author: William Murphy <will.murphy1994@gmail.com>
+Date:   Thu Nov 30 13:49:44 2017 -0800
+
+    Add control frame data structure
+
+[33mcommit ee0623640f5f0d88b53b822cf6cdbe1c92117490[m
+Author: William Murphy <will.murphy1994@gmail.com>
+Date:   Thu Nov 30 12:43:10 2017 -0800
+
+    Status bar done
+
+[33mcommit 564050ae3220cd5b4582fcd787760179b82a90da[m
+Author: William Murphy <will.murphy1994@gmail.com>
+Date:   Wed Nov 29 19:07:11 2017 -0800
+
+    Initial commit
+
+[33mcommit ad07a14eef70e11f8ae51aaf30b4eabef8b62ef0[m
+Author: William Murphy <will.murphy1994@gmail.com>
+Date:   Mon Nov 27 09:34:59 2017 -0800
+
+    Update README.md
+
+[33mcommit 8a0299295c26f7587ad77e581a8d8977a09ed7c8[m
+Author: William Murphy <will.murphy1994@gmail.com>
+Date:   Mon Nov 27 09:23:23 2017 -0800
+
+    Initial commit

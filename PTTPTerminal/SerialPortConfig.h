@@ -3,6 +3,7 @@
 // By Will Murphy
 inline BOOL OpenSerialPort(LPHANDLE hSerialPort, TCHAR* portName)
 {
+	//Checks the serial port
 	*hSerialPort = CreateFile(portName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 	if (*hSerialPort == INVALID_HANDLE_VALUE)
 	{

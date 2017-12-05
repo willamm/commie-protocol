@@ -1,5 +1,6 @@
 #include "Console.h"
 
+/* Constructs the console that exists in the Qt terminal*/
 Console::Console(QWidget *parent)
 	: QPlainTextEdit(parent)
 {
@@ -14,7 +15,7 @@ Console::~Console()
 {
 }
 
-
+//Places the text in the console
 void Console::putData(const QByteArray& text)
 {
 	setPlainText(QString(text));

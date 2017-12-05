@@ -7,6 +7,8 @@
 #include <QFileDialog>
 #include <QSerialPortInfo>
 #include <fstream>
+#include <queue>
+#include "CRC.h"
 
 class QtTerminal : public QMainWindow
 {
@@ -24,6 +26,8 @@ public slots:
 	void readFile();
 	void initSerialPort(QAction* triggeredPortName);
 	void addAvailablePorts();
+	unsigned processFile(std::ifstream& file);
+	QByteArray packetizeFile(std::queue<char>* data);
 
 private:
 	Ui::QtTerminalClass ui;
