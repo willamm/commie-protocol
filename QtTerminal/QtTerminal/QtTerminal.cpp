@@ -159,8 +159,13 @@ QByteArray QtTerminal::packetizeFile(std::queue<char>* data)
 		dataFrame.append('\0');
 	}
 
-	//Append the CRC to the end of the array
-	dataFrame.append(CRC::Calculate(dataFrame, sizeof(dataFrame), CRC::CRC_32()));
+	//Create the crc
+	quint32 crc = CRC::Calculate(dataFrame, sizeof(dataFrame), CRC::CRC_32());
+	//Append the crc to the end of the array, bitshifting a byte at a time
+	dataFrame.append(quint8(crc >> 24));
+	dataFrame.append(quint8(crc >> 16));
+	dataFrame.append(quint8(crc >> 8));
+	dataFrame.append(quint8(crc));
 
 	//Return the frame
 	return dataFrame;
