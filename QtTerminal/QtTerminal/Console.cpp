@@ -17,5 +17,5 @@ Console::~Console()
 
 void Console::putData(const QByteArray& text)
 {
-	setPlainText(QString(text));
+	insertPlainText(QString(text));
 }
