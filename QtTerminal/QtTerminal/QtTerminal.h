@@ -5,6 +5,7 @@
 #include "Console.h"
 #include <QSerialPort>
 #include <QFileDialog>
+#include <qtimer.h>
 #include <QSerialPortInfo>
 #include <fstream>
 #include <queue>
@@ -42,6 +43,9 @@ public slots:
 	QByteArray createEnqFrame();
 
 	void handleBytesWritten(qint64 bytes);
+
+	void genericTimeout();
+	void randomTimeout();
 
 private:
 	Ui::QtTerminalClass ui;

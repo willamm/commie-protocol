@@ -18,6 +18,8 @@ QtTerminal::QtTerminal(QWidget *parent)
 //Initial actions executed during QtTerminal instantiation
 void QtTerminal::initActionConnections()
 {
+
+	randomTimeout();
 	// Opens QDialog to send file when Send File button is clicked
 	connect(ui.actionSend_File, &QAction::triggered, this, &QtTerminal::openFileDialog);
 	connect(this, &QtTerminal::fileSelected, this, &QtTerminal::writeFile);
@@ -105,6 +107,22 @@ void QtTerminal::handleError(QSerialPort::SerialPortError error)
 
 void QtTerminal::handleBytesWritten(qint64 bytes)
 {
+}
+
+void QtTerminal::genericTimeout()
+{
+	QTimer *genericTimeout = new QTimer(this);
+	genericTimeout->setSingleShot(true);
+	connect(genericTimeout, SIGNAL(timeout()), this, SLOT(update()));
+	genericTimeout->start(2000);
+}
+
+void QtTerminal::randomTimeout()
+{
+	QTimer *randomTimeout = new QTimer(this);
+	randomTimeout->setSingleShot(true);
+	connect(randomTimeout, SIGNAL(timeout()), this, SLOT(update()));
+	randomTimeout->start(2000 + (100 * ((qrand() % 10) + 1)));
 }
 
 void QtTerminal::openFileDialog()
