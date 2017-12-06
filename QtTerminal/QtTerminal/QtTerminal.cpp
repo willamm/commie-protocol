@@ -11,6 +11,8 @@ QtTerminal::QtTerminal(QWidget *parent)
 	initActionConnections();
 	addAvailablePorts();
 	ui.actionConnect->setEnabled(false);
+	ui.actionDisconnect->setEnabled(false);
+	ui.actionSend_File->setEnabled(false);
 }
 
 //Initial actions executed during QtTerminal instantiation
@@ -18,7 +20,11 @@ void QtTerminal::initActionConnections()
 {
 	// Opens QDialog to send file when Send File button is clicked
 	connect(ui.actionSend_File, &QAction::triggered, this, &QtTerminal::openFileDialog);
-	connect(this, &QtTerminal::fileSelected, this, &QtTerminal::readFile);
+	connect(this, &QtTerminal::fileSelected, this, &QtTerminal::writeFile);
+	connect(this, &QtTerminal::packetSent, this, &QtTerminal::packetReceived);
+	connect(&port, &QSerialPort::errorOccurred, this, &QtTerminal::handleError);
+	connect(&port, &QSerialPort::readyRead, this, &QtTerminal::readFile);
+	//connect(this, QtTerminal::ackSent, this, QtTerminal::ackReceived);
 	connect(ui.actionConnect, &QAction::triggered, this, [this]()
 	{
 		if (port.open(QIODevice::ReadWrite))
@@ -26,6 +32,17 @@ void QtTerminal::initActionConnections()
 			ui.statusBar->showMessage("Connected", 1000);
 			ui.actionConnect->setEnabled(false);
 			ui.actionDisconnect->setEnabled(true);
+			ui.actionSend_File->setEnabled(true);
+		}
+	});
+	connect(ui.actionDisconnect, &QAction::triggered, this, [this]()
+	{
+		if (port.isOpen())
+		{
+			port.close();
+			ui.actionConnect->setEnabled(true);
+			ui.actionDisconnect->setEnabled(false);
+			ui.actionSend_File->setEnabled(false);
 		}
 	});
 }
@@ -45,6 +62,8 @@ void QtTerminal::initSerialPort(QAction* triggeredPortName)
 		port.setParity(QSerialPort::NoParity);
 		port.setStopBits(QSerialPort::OneStop);
 		ui.actionConnect->setEnabled(true);
+		ui.actionDisconnect->setEnabled(false);
+		ui.actionSelect_Port->setEnabled(false);
 	}
 }
 
@@ -63,32 +82,32 @@ void QtTerminal::addAvailablePorts()
 }
 
 //Creates the open file dialog
+void QtTerminal::packetReceived(std::string packet)
+{
+}
+
+void QtTerminal::ackReceived(std::string ack)
+{
+}
+
+void QtTerminal::handleError(QSerialPort::SerialPortError error)
+{
+}
+
 void QtTerminal::openFileDialog()
 {
-	sendFileName = QFileDialog::getOpenFileName(this, "Send File");
-	emit fileSelected();
+	QString sendFileName = QFileDialog::getOpenFileName(this, "Send File");
+	emit fileSelected(sendFileName);
 }
 
 //Reads the file that the user selects in the terminal
 void QtTerminal::readFile()
 {
-	//If a file is selected
-	if (!sendFileName.isEmpty())
-	{
-		//Open a stream to that file
-		std::ifstream file(sendFileName.toStdString());
-		//If the file stream opens successfully
-		if (file.is_open())
-		{
-			//This iterates through the file from beginning to end until the stream cuts off, and places the content in a string
-			std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
-			//Print it out to the Qt console
-			console.putData(QString::fromStdString(content).toLocal8Bit());
-
-			//Uncomment this to use the process file
-			//processFile(file);
-		}
-	}
+	//This is from will's commit
+	char buf[518];
+	port.read(buf, 518);
+	console.putData(buf);
+	//// should send an ACK here
 }
 
 //Processes the file by packetizing it in 512 byte chunks.
@@ -214,4 +233,10 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
 	}
 
 	return 0;
+}
+
+void QtTerminal::writeFile(QString fileName)
+{
+	port.write(fileName.toLocal8Bit());
+
 }
