@@ -50,6 +50,7 @@ public slots:
 
 	void genericTimeout();
 	void randomTimeout();
+	void bidForLine();
 
 private:
 	Ui::QtTerminalClass ui;
