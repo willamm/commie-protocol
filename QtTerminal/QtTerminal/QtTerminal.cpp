@@ -18,8 +18,6 @@ QtTerminal::QtTerminal(QWidget *parent)
 //Initial actions executed during QtTerminal instantiation
 void QtTerminal::initActionConnections()
 {
-
-	randomTimeout();
 	// Opens QDialog to send file when Send File button is clicked
 	connect(ui.actionSend_File, &QAction::triggered, this, &QtTerminal::openFileDialog);
 	connect(this, &QtTerminal::fileSelected, this, &QtTerminal::writeFile);
@@ -101,6 +99,16 @@ void QtTerminal::handleBytesWritten(qint64 bytes)
 {
 }
 
+void QtTerminal::bidForLine() 
+{
+	char ENQ = 0x25;
+	QString toSend;
+	toSend = ENQ;
+	console.putData("Bidding for line...");
+	port.write("0x25");
+}
+
+// Creates a timeout, lasting (2000ms), then calls update()
 void QtTerminal::genericTimeout()
 {
 	QTimer *genericTimeout = new QTimer(this);
@@ -109,6 +117,7 @@ void QtTerminal::genericTimeout()
 	genericTimeout->start(2000);
 }
 
+// Creates a timeout, lasting (2000ms + (100ms * rand(1...10))), then calls update()
 void QtTerminal::randomTimeout()
 {
 	QTimer *randomTimeout = new QTimer(this);
