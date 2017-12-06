@@ -17,6 +17,7 @@ QtTerminal::QtTerminal(QWidget *parent)
 	ui.actionDisconnect->setEnabled(false);
 	ui.actionSend_File->setEnabled(false);
 	connect(&timer, &QTimer::timeout, this, &QtTerminal::handleTimeout);
+	state = 1; //set to idle
 }
 
 QtTerminal::~QtTerminal()
@@ -151,11 +152,61 @@ void QtTerminal::openFileDialog()
 //Reads the file that the user selects in the terminal
 void QtTerminal::readFile()
 {
+	//Will's block of code
 	char readBuffer[PACKET_SIZE];
 	port.read(readBuffer, PACKET_SIZE);
 	console.putData(readBuffer);
 	emit sendAck(createAckFrame());
 	disconnect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);
+
+	//Angus's block of code
+	switch (state)
+	{
+	case 1: //idle state
+	{
+		//Read in 2 bytes, the size of the control frame
+		QByteArray controlFrame = port.read(2);
+		//Parse the control frame, and receive the control character
+		char controlChar = parseControlFrame(controlFrame);
+		//Can use this to check the frame
+		console.putData(controlFrame);
+
+		if (controlChar == 0x05) //If you receive an ENQ
+		{
+			//send an ack
+			//Set to a receive state
+		}
+
+		break;
+	}
+	case 2: //receive state
+	{
+		//Read in 518 bytes, the size of the data frame
+		QByteArray dataFrame = port.read(518);
+		//Parse the control frame, and receive the payload
+		QByteArray data = parseDataFrame(dataFrame);
+		//Print the payload in console
+		console.putData(data);
+
+		break;
+	}
+	case 3: //transmit state
+	{
+		//Read in 2 bytes, the size of the control frame
+		QByteArray controlFrame = port.read(2);
+		//Parse the control frame, and receive the control character
+		char controlChar = parseControlFrame(controlFrame);
+		//Can use this to check the frame
+		console.putData(controlFrame);
+
+		if (controlChar == 0x06) //If you receive an ACK
+		{
+			//send a packet
+		}
+
+		break;
+	}
+	}
 }
 
 //Processes the file by packetizing it in 512 byte chunks.
@@ -241,9 +292,9 @@ QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 }
 
 //This parses the frame
-//Returns nullptr if syn or stx bit is not present
+//Returns nullptr if syn or stx bit is not present, crc failed
 //Returns the payload if successful
-QByteArray QtTerminal::parseFrame(QByteArray receivedFrame)
+QByteArray QtTerminal::parseDataFrame(QByteArray receivedFrame)
 {
 	if (receivedFrame.at(0) != 0x02 || receivedFrame.at(1) != 0x16)
 	{
@@ -255,6 +306,24 @@ QByteArray QtTerminal::parseFrame(QByteArray receivedFrame)
 	}
 
 	return nullptr;
+}
+
+//This parses a control frame
+//Returns the control character if present
+//Returns 0 if failed
+char QtTerminal::parseControlFrame(QByteArray receivedFrame)
+{
+	if (receivedFrame.at(0) != 0x02)
+	{
+		return 0;
+	}
+
+	if (receivedFrame.at(0) == 0x05 || receivedFrame.at(0) == 0x06)
+	{
+		return receivedFrame.at(1);
+	}
+
+	return 0;
 }
 
 //Checks the crc by processing the received frame's payload
