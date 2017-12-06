@@ -160,63 +160,61 @@ void QtTerminal::openFileDialog()
 //Reads the file that the user selects in the terminal
 void QtTerminal::readFile()
 {
-	char readBuffer[PACKET_SIZE];
+	/*char readBuffer[PACKET_SIZE];
 	port.read(readBuffer, PACKET_SIZE);
 	console.putData(readBuffer);
 	emit sendAck(createAckFrame());
-	disconnect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);
-	//Will's block of code
-//>>>>>>> 337bde43f2a807e7aea950edbdee1dde69bb8e16
-//
-//
-//	//Angus's block of code
-//	switch (state)
-//	{
-//	case 1: //idle state
-//	{
-//		//Read in 2 bytes, the size of the control frame
-//		QByteArray controlFrame = port.read(2);
-//		//Parse the control frame, and receive the control character
-//		char controlChar = parseControlFrame(controlFrame);
-//		//Can use this to check the frame
-//		console.putData(controlFrame);
-//
-//		if (controlChar == 0x05) //If you receive an ENQ
-//		{
-//			//send an ack
-//			//Set to a receive state
-//		}
-//
-//		break;
-//	}
-//	case 2: //receive state
-//	{
-//		//Read in 518 bytes, the size of the data frame
-//		QByteArray dataFrame = port.read(518);
-//		//Parse the control frame, and receive the payload
-//		QByteArray data = parseDataFrame(dataFrame);
-//		//Print the payload in console
-//		console.putData(data);
-//
-//		break;
-//	}
-//	case 3: //transmit state
-//	{
-//		//Read in 2 bytes, the size of the control frame
-//		QByteArray controlFrame = port.read(2);
-//		//Parse the control frame, and receive the control character
-//		char controlChar = parseControlFrame(controlFrame);
-//		//Can use this to check the frame
-//		console.putData(controlFrame);
-//
-//		if (controlChar == 0x06) //If you receive an ACK
-//		{
-//			//send a packet
-//		}
-//
-//		break;
-//	}
-//	}
+	disconnect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);*/
+
+
+	//Angus's block of code
+	switch (state)
+	{
+		case 1: //idle state
+		{
+			//Read in 2 bytes, the size of the control frame
+			QByteArray controlFrame = port.read(2);
+			//Parse the control frame, and receive the control character
+			char controlChar = parseControlFrame(controlFrame);
+			//Can use this to check the frame
+			console.putData(controlFrame);
+
+			if (controlChar == 0x05) //If you receive an ENQ
+			{
+				//send an ack
+				//Set to a receive state
+			}
+
+			break;
+		}
+		case 2: //receive state
+		{
+			//Read in 518 bytes, the size of the data frame
+			QByteArray dataFrame = port.read(518);
+			//Parse the control frame, and receive the payload
+			QByteArray data = parseDataFrame(dataFrame);
+			//Print the payload in console
+			console.putData(data);
+
+			break;
+		}
+		case 3: //transmit state
+		{
+			//Read in 2 bytes, the size of the control frame
+			QByteArray controlFrame = port.read(2);
+			//Parse the control frame, and receive the control character
+			char controlChar = parseControlFrame(controlFrame);
+			//Can use this to check the frame
+			console.putData(controlFrame);
+
+			if (controlChar == 0x06) //If you receive an ACK
+			{
+				//send a packet
+			}
+
+			break;
+		}
+	}
 }
 
 //Processes the file by packetizing it in 512 byte chunks.
