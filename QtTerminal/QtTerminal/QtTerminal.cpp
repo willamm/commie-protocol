@@ -270,4 +270,29 @@ void QtTerminal::writeFile(QString fileName)
 		}
 	}
 }
-		
+
+//Creates the ack frame and returns it
+QByteArray QtTerminal::createAckFrame()
+{
+	QByteArray ackFrame;
+
+	//Append SYN
+	ackFrame.append(0x16);
+	//Append ACK
+	ackFrame.append(0x06);
+
+	return ackFrame;
+}
+
+//Creates the enq frame and returns it
+QByteArray QtTerminal::createEnqFrame()
+{
+	QByteArray enqFrame;
+
+	//Append SYN
+	enqFrame.append(0x16);
+	//Append ENQ
+	enqFrame.append(0x06);
+
+	return enqFrame;
+}

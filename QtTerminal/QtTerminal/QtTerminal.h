@@ -40,8 +40,11 @@ public slots:
 	void packetReceived(std::string packet);
 	void ackReceived(std::string ack);
 	void handleError(QSerialPort::SerialPortError error);
-	void handleBytesWritten(qint64 bytes);
 	void handleTimeout();
+	QByteArray createAckFrame();
+	QByteArray createEnqFrame();
+
+	void handleBytesWritten(qint64 bytes);
 
 private:
 	Ui::QtTerminalClass ui;
