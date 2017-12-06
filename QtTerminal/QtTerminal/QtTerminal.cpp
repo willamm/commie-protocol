@@ -139,6 +139,9 @@ void QtTerminal::readFile()
 	port.read(buf, 518);
 	console.putData(buf);
 	&QtTerminal::handleError;
+	QByteArray ACK;
+	ACK.append(0x06);
+	port.write(ACK);
 	//// should send an ACK here
 }
 
@@ -273,6 +276,12 @@ void QtTerminal::writeFile(QString fileName)
 	port.write(fileName.toLocal8Bit());
 	console.putData("Packet sent");
 	//wait for ACK
+	char buf[518];
+	port.read(buf, 518);
+	if (buf != "0x06")
+	{
+		//ACK not received
+	}
 }
 
 //Creates the ack frame and returns it
