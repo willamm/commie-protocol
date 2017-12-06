@@ -6,6 +6,7 @@ QtTerminal::QtTerminal(QWidget *parent)
 	, console(this)
 	, port(this)
 {
+	timer.setSingleShot(true);
 	ui.setupUi(this);
 	setCentralWidget(&console);
 	initActionConnections();
@@ -13,6 +14,12 @@ QtTerminal::QtTerminal(QWidget *parent)
 	ui.actionConnect->setEnabled(false);
 	ui.actionDisconnect->setEnabled(false);
 	ui.actionSend_File->setEnabled(false);
+	connect(&timer, &QTimer::timeout, this, &QtTerminal::handleTimeout);
+}
+
+QtTerminal::~QtTerminal()
+{
+	delete data;
 }
 
 //Initial actions executed during QtTerminal instantiation
@@ -24,7 +31,7 @@ void QtTerminal::initActionConnections()
 	connect(this, &QtTerminal::packetSent, this, &QtTerminal::packetReceived);
 	connect(&port, &QSerialPort::errorOccurred, this, &QtTerminal::handleError);
 	connect(&port, &QSerialPort::readyRead, this, &QtTerminal::readFile);
-	connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::)
+	connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::handleBytesWritten);
 	//connect(this, QtTerminal::ackSent, this, QtTerminal::ackReceived);
 	connect(ui.actionConnect, &QAction::triggered, this, [this]()
 	{
@@ -95,6 +102,16 @@ void QtTerminal::handleError(QSerialPort::SerialPortError error)
 {
 }
 
+void QtTerminal::handleBytesWritten(qint64 bytes)
+{
+	
+}
+
+void QtTerminal::handleTimeout()
+{
+	console.putData("Time out");
+}
+
 void QtTerminal::openFileDialog()
 {
 	QString sendFileName = QFileDialog::getOpenFileName(this, "Send File");
@@ -121,7 +138,7 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 	//The file iterator
 	std::istreambuf_iterator<char> file_iterator(file);
 	//The queue meant to hold data from the file
-	std::queue<char>* data = new std::queue<char>();
+	data = new std::queue<char>();
 	//Keeps track of how many bytes processed
 	unsigned count = 0;
 
@@ -239,8 +256,18 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
 void QtTerminal::writeFile(QString fileName)
 {
 	//Send 10 packets
-	port.write(fileName.toLocal8Bit());
-	console.putData("Packet sent");
+	std::ifstream fileStream(fileName.toStdString());
+	processFile(fileStream);
+	int packetCount = 0;
+	int qCount = 0;
+	while (!data->empty() && packetCount <= 10)
+	{
+		//port.write(data);
+		//packetCount++;
+	}
+	//port.write(fileName.toLocal8Bit());
+//	console.putData("Packet sent");
 	//wait for ACK
+	timer.start(2000);
 }
 		

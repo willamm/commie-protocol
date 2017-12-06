@@ -8,6 +8,8 @@
 #include <QSerialPortInfo>
 #include <fstream>
 #include <queue>
+#include <QTimer>
+
 #include "CRC.h"
 
 class QtTerminal : public QMainWindow
@@ -21,6 +23,7 @@ signals:
 
 public:
 	QtTerminal(QWidget *parent = Q_NULLPTR);
+	virtual ~QtTerminal();
 
 	void initActionConnections();
 
@@ -37,9 +40,15 @@ public slots:
 	void packetReceived(std::string packet);
 	void ackReceived(std::string ack);
 	void handleError(QSerialPort::SerialPortError error);
+	void handleBytesWritten(qint64 bytes);
+	void handleTimeout();
 
 private:
 	Ui::QtTerminalClass ui;
 	Console console;
 	QSerialPort port;
+
+	std::queue<char>* data;
+
+	QTimer timer; // for timeouts
 };
