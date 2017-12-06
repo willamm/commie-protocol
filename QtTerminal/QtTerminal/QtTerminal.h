@@ -16,10 +16,10 @@ class QtTerminal : public QMainWindow
 {
 	Q_OBJECT
 
+	
 signals:
 	void fileSelected(QString fileName);
-	void packetSent(std::string packet);
-	void ackSent(std::string ack);
+	void sendAck(const QByteArray& ack);
 
 public:
 	QtTerminal(QWidget *parent = Q_NULLPTR);
@@ -38,7 +38,7 @@ public slots:
 	bool checkCRC(QByteArray receivedFrame);
 	QByteArray parseFrame(QByteArray receivedFrame);
 	void packetReceived(std::string packet);
-	void ackReceived(std::string ack);
+	void ackReceived(const QByteArray& ack);
 	void handleError(QSerialPort::SerialPortError error);
 	void handleTimeout();
 	QByteArray createAckFrame();
