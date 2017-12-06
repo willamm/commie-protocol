@@ -28,6 +28,8 @@ public slots:
 	void addAvailablePorts();
 	unsigned processFile(std::ifstream& file);
 	QByteArray packetizeFile(std::queue<char>* data);
+	bool checkCRC(QByteArray receivedFrame);
+	QByteArray parseFrame(QByteArray receivedFrame);
 
 private:
 	Ui::QtTerminalClass ui;

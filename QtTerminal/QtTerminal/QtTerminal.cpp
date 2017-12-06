@@ -155,12 +155,14 @@ QByteArray QtTerminal::packetizeFile(std::queue<char>* data)
 	}
 
 	//Stuffs the byte array with nulls until it is 514 bytes
-	while (dataFrame.size() < 514) {
+	while (dataFrame.size() < 514)
+	{
 		dataFrame.append('\0');
 	}
 
 	//Create the crc
-	quint32 crc = CRC::Calculate(dataFrame, sizeof(dataFrame), CRC::CRC_32());
+	//dataFrame.data() returns a char* to the beginning of the array, increment by 2 to create crc from payload
+        quint32 crc = CRC::Calculate(dataFrame.right(512), sizeof(dataFrame.right(512)), CRC::CRC_32());
 	//Append the crc to the end of the array, bitshifting a byte at a time
 	dataFrame.append(quint8(crc >> 24));
 	dataFrame.append(quint8(crc >> 16));
@@ -169,4 +171,47 @@ QByteArray QtTerminal::packetizeFile(std::queue<char>* data)
 
 	//Return the frame
 	return dataFrame;
+}
+
+//This parses the frame
+//Returns nullptr if syn or stx bit is not present
+//Returns the payload if successful
+QByteArray QtTerminal::parseFrame(QByteArray receivedFrame)
+{
+	if (receivedFrame.at(0) != 0x02 || receivedFrame.at(1) != 0x16)
+	{
+		return nullptr;
+	}
+
+	if (checkCRC(receivedFrame)) {
+            return receivedFrame.mid(2,512);
+	}
+
+	return nullptr;
+}
+
+//Checks the crc by processing the received frame's payload
+//We are checking crc by recalculating at the received end. Just like a checksum
+bool QtTerminal::checkCRC(QByteArray receivedFrame)
+{
+	//Store the payload as the array from position 2, and 512 bytes after that
+        QByteArray payload = receivedFrame.mid(2,512);
+        //Store just the 4 rightmost bits
+        QByteArray receivedCrc = receivedFrame.right(4);
+        //Stores the calculated crc
+        QByteArray crc;
+
+        //Calculate the crc
+        quint32 crc_int = CRC::Calculate(payload, sizeof(payload), CRC::CRC_32());
+        //Append the crc to the end of the array, bitshifting a byte at a time
+        crc.append(quint8(crc_int >> 24));
+        crc.append(quint8(crc_int >> 16));
+        crc.append(quint8(crc_int >> 8));
+        crc.append(quint8(crc_int));
+
+	if (crc == receivedCrc) {
+		return 1;
+	}
+
+	return 0;
 }
