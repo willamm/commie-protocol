@@ -179,7 +179,7 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 	//The queue meant to hold data from the file
 	std::queue<char> data;
 	//Keeps track of how many bytes processed
-	unsigned count = 0;
+	unsigned count = 1;
 
 	//While it is not EOF
 	while (file_iterator != std::istreambuf_iterator<char>())
