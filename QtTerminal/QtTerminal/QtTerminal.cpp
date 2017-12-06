@@ -1,7 +1,49 @@
+/*------------------------------------------------------------------------------------------------------------------
+-- SOURCE FILE: QtTerminal.cpp - An application that will monitor a send a text file wirelessly using the custom data comm protocol
+--
+-- PROGRAM: Power to the Protocolteriat Terminal
+--
+-- FUNCTIONS:
+-- QtTerminal::QtTerminal(QWidget *parent)
+-- QtTerminal::~QtTerminal()
+-- void QtTerminal::initActionConnections()
+-- void QtTerminal::initSerialPort(QAction* triggeredPortName)
+-- void QtTerminal::addAvailablePorts()
+-- void QtTerminal::packetReceived(std::string packet)
+-- void QtTerminal::ackReceived(const QByteArray& ack)
+-- void QtTerminal::handleError(QSerialPort::SerialPortError error)
+-- void QtTerminal::handleBytesWritten(qint64 bytes)
+-- void QtTerminal::handleTimeout()
+-- void QtTerminal::genericTimeout()
+-- void QtTerminal::randomTimeout()
+-- void QtTerminal::openFileDialog()
+-- void QtTerminal::readFile()
+-- void QtTerminal::writeFile()
+-- unsigned QtTerminal::processFile(std::ifstream& file)
+-- QByteArray QtTerminal::packetizeFile(std::queue<char> data)
+-- QByteArray QtTerminal::parseDataFrame(QByteArray receivedFrame)
+-- char QtTerminal::parseControlFrame(QByteArray receivedFrame)
+-- bool QtTerminal::checkCRC(QByteArray receivedFrame)
+-- QByteArray QtTerminal::createAckFrame()
+-- QByteArray QtTerminal::createEnqFrame()
+--
+--
+--
+-- DATE December, 4, 2017
+--
+--
+-- DESIGNER: Vafa Dehghan Saei, William Murphy, Mackenzie Craig, Angus Lam
+--
+-- PROGRAMMER: Vafa Dehghan Saei, William Murphy, Mackenzie Craig, Angus Lam
+--
+-- NOTES:
+-- This program will conneect to provided wireless modem, then the user selects a file and the program processes said 
+-- file and sends it through the modem using the protocol. The program also receives files and builds it up again. 
+----------------------------------------------------------------------------------------------------------------------*/
 #include "QtTerminal.h"
-
-
 static constexpr int PACKET_SIZE = 518;
+
+
 //Constructs the QtTerminal window
 QtTerminal::QtTerminal(QWidget *parent)
 	: QMainWindow(parent)
