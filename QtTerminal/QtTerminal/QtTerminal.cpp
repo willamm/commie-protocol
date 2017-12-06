@@ -361,11 +361,11 @@ void QtTerminal::readFile()
 				}
 
 			}
-			//if (t.currentTime() >= nextTime)
-			//{
-			//	state = 1;
-			//	console.putData("Going back to idle from receive state\n");
-			//}
+			/*if (t.currentTime() >= nextTime)
+			{
+				state = 1;
+				console.putData("Going back to idle from receive state\n");
+			}*/
 			break;
 		}
 		case 3: // bid for line state
