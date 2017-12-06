@@ -10,7 +10,7 @@
 #include <fstream>
 #include <queue>
 #include <QTimer>
-
+#include <QTime>
 #include "CRC.h"
 #include <QMessageBox>
 
@@ -60,4 +60,7 @@ private:
 
 	std::vector<QByteArray> packets;
 	QTimer timer; // for timeouts
+	bool state3timeout;
+	QTime t;
+	QTime nextTime;
 };

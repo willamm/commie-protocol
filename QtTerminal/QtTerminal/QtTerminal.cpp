@@ -159,12 +159,12 @@ void QtTerminal::readFile()
 	emit sendAck(createAckFrame());
 	disconnect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);*/
 
-
 	//Angus's block of code
 	switch (state)
 	{
 		case 1: //idle state
 		{
+			console.putData("Idle state\n");
 			//Read in 2 bytes, the size of the control frame
 			QByteArray controlFrame = port.read(2);
 			//Parse the control frame, and receive the control character
@@ -177,6 +177,9 @@ void QtTerminal::readFile()
 				console.putData("received ENQ\n");
 				//send an ack
 				console.putData("sending ACK\n");
+				nextTime = t.currentTime();
+				nextTime.addMSecs(2000);
+				console.putData("starting timer\n");
 				port.write(createAckFrame());
 				state = 2; //Set to a receive state
 			}
@@ -195,6 +198,12 @@ void QtTerminal::readFile()
 				console.putData(data);
 				port.write(createAckFrame());
 			}
+
+			if (t.currentTime() >= nextTime)
+			{
+				state = 1;
+				console.putData("Going back to idle\n");
+			}
 			break;
 		}
 		case 3: // bid for line state
@@ -205,7 +214,7 @@ void QtTerminal::readFile()
 			//Parse the control frame, and receive the control character
 			char controlChar = parseControlFrame(controlFrame);
 			//Can use this to check the frame
-			console.putData(controlFrame);
+			//console.putData(controlFrame);
 
 			if (controlChar == 0x06) //If you receive an ACK
 			{
@@ -213,6 +222,12 @@ void QtTerminal::readFile()
 				state = 4; // go to send state
 			}
 
+			if (t.currentTime() >= nextTime)
+			{
+				state = 1;
+				console.putData("Going back to idle\n");
+			}
+			
 			break;
 		}
 		case 4: // send state
@@ -387,6 +402,9 @@ void QtTerminal::writeFile(QString fileName)
 		case 1: // idle
 		{
 			console.putData("Bidding for line...\n");
+			nextTime = t.currentTime();
+			nextTime.addMSecs(2000);
+			console.putData("starting timer\n");
 			port.write(createEnqFrame());
 			state = 3; // trying to write while idling, good to bid for line.
 			break;
