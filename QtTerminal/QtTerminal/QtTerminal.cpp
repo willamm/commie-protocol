@@ -96,14 +96,15 @@ void QtTerminal::openFileDialog()
 void QtTerminal::readFile()
 {
 	char buf[512];
-	port.read(buf, 512);
-	console.putData(buf);
-	// should send an ACK here
+	if (port.canReadLine())
+	{
+		port.read(buf, 512);
+		console.putData(buf);
+	}
 }
 
 void QtTerminal::writeFile(QString fileName)
 {
 	port.write(fileName.toLocal8Bit());
-
 }
 		
