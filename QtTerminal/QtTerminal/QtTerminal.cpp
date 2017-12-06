@@ -24,7 +24,7 @@ void QtTerminal::initActionConnections()
 	connect(this, &QtTerminal::packetSent, this, &QtTerminal::packetReceived);
 	connect(&port, &QSerialPort::errorOccurred, this, &QtTerminal::handleError);
 	connect(&port, &QSerialPort::readyRead, this, &QtTerminal::readFile);
-	connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::)
+	connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::handleBytesWritten);
 	//connect(this, QtTerminal::ackSent, this, QtTerminal::ackReceived);
 	connect(ui.actionConnect, &QAction::triggered, this, [this]()
 	{
@@ -92,6 +92,10 @@ void QtTerminal::ackReceived(std::string ack)
 }
 
 void QtTerminal::handleError(QSerialPort::SerialPortError error)
+{
+}
+
+void QtTerminal::handleBytesWritten(qint64 bytes)
 {
 }
 

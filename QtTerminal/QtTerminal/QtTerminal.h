@@ -38,6 +38,8 @@ public slots:
 	void ackReceived(std::string ack);
 	void handleError(QSerialPort::SerialPortError error);
 
+	void handleBytesWritten(qint64 bytes);
+
 private:
 	Ui::QtTerminalClass ui;
 	Console console;
