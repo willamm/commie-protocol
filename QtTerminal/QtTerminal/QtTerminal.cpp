@@ -357,7 +357,7 @@ void QtTerminal::writeFile()
 		int packetCount = 0;
 		for (const QByteArray& packet : packets)
 		{
-			console.putData(packet);
+ 			console.putData(packet);
 			port.write(packet);
 		}
 		break;
