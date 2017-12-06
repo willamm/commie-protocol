@@ -73,6 +73,9 @@
     <ClInclude Include="GeneratedFiles\ui_QtTerminal.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="CRC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="QtTerminal.rc" />
