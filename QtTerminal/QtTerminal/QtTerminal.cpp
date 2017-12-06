@@ -210,20 +210,20 @@ void QtTerminal::ackReceived(const QByteArray& ack)
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: handleError
 //
 // REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Mackenzie Craig and Vafa Dehghan Saei
 //
-// PROGRAMMER: 
+// PROGRAMMER: Angus Lam and Will Murphy
 //
-// INTERFACE: 
+// INTERFACE: void QtTerminal::handleError(QSerialPort::SerialPortError error)
 //
-// RETURNS:
+// RETURNS: void
 //
 // NOTES: 
-//
+// Outputs an error message based on a SerialPortError that is passed in.
 void QtTerminal::handleError(QSerialPort::SerialPortError error)
 {
 	if (error != QSerialPort::NoError)
@@ -272,20 +272,21 @@ void QtTerminal::openFileDialog()
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: readFile
 //
 // REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Mackenzie Craig and Vafa Dehghan Saei
 //
-// PROGRAMMER: 
+// PROGRAMMER: Will Murphy and Angus Lam
 //
-// INTERFACE: 
+// void QtTerminal::readFile()
 //
-// RETURNS:
+// RETURNS: void
 //
 // NOTES: 
-//
+// Checks a switch statement and runs code blocks dependant on state.
+// 1: idle 2: receive 3: bid for line 4: send
 void QtTerminal::readFile()
 {
 	/*char readBuffer[PACKET_SIZE];
@@ -445,20 +446,21 @@ void QtTerminal::readFile()
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: writeFile
 //
 // REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Mackenzie Craig and Vafa Dehghan Saei
 //
-// PROGRAMMER: 
+// PROGRAMMER: Will Murphy and Angus Lam
 //
-// INTERFACE: 
+// INTERFACE: void QtTerminal::writeFile()
 //
-// RETURNS:
+// RETURNS: void
 //
 // NOTES: 
-//
+// Checks a switch statement and runs code blocks dependant on state.
+// 1: idle 2: receive 3: bid for line 4: send
 void QtTerminal::writeFile()
 {
 	// Before writing, 
@@ -516,19 +518,19 @@ void QtTerminal::writeFile()
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: processFile
 //
 // REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Mackenzie Craig and Vafa Dehghan Saei
 //
-// PROGRAMMER: 
+// PROGRAMMER: Mackenzie Craig
 //
-// INTERFACE: 
+// INTERFACE: unsigned QtTerminal::processFile(std::ifstream& file)
 //
-// RETURNS:
+// RETURNS: the count of bits added
 //
-// NOTES: 
+// NOTES: Processes a file by checking if the data needs to be split at 512
 //
 unsigned QtTerminal::processFile(std::ifstream& file)
 {
@@ -565,19 +567,20 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: packetizeFile
 //
 // REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Mackenzie Craig and Vafa Dehghan Saei
 //
-// PROGRAMMER: 
+// PROGRAMMER: Will Murphy
 //
-// INTERFACE: 
+// INTERFACE: QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 //
-// RETURNS:
+// RETURNS: the dataFrame
 //
 // NOTES: 
+// Creates the structure of a packet by appending SYN, STX, and CRC.
 //
 QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 {
@@ -618,20 +621,19 @@ QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: parseDataFrame
 //
 // REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Mackenzie Craig & Vafa Dehghan Saei
 //
-// PROGRAMMER: 
+// PROGRAMMER: Angus Lam
 //
-// INTERFACE: 
+// INTERFACE: QByteArray QtTerminal::parseDataFrame(QByteArray receivedFrame)
 //
-// RETURNS:
+// RETURNS: returns the data portion of the frame, or nullptr
 //
-// NOTES: 
-//
+// NOTES:
 //This parses the frame
 //Returns nullptr if syn or stx bit is not present, crc failed
 //Returns the payload if successful
@@ -645,20 +647,19 @@ QByteArray QtTerminal::parseDataFrame(QByteArray receivedFrame)
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: parseControlFrame
 //
 // REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Mackenzie Craig & Vafa Dehghan Saei
 //
-// PROGRAMMER: 
+// PROGRAMMER: Angus Lam
 //
-// INTERFACE: 
+// INTERFACE: char QtTerminal::parseControlFrame(QByteArray receivedFrame)
 //
-// RETURNS:
+// RETURNS: 0, or the character at position 1 or 0 in the QByteArray
 //
 // NOTES: 
-//
 //This parses a control frame
 //Returns the control character if present
 //Returns 0 if failed
@@ -678,20 +679,19 @@ char QtTerminal::parseControlFrame(QByteArray receivedFrame)
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: checkCRC
 //
 // REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Angus Lam
 //
-// PROGRAMMER: 
+// PROGRAMMER: Will Murphy
 //
-// INTERFACE: 
+// INTERFACE: bool QtTerminal::checkCRC(QByteArray receivedFrame)
 //
-// RETURNS:
+// RETURNS: 1 or 0, depending on success or fail.
 //
 // NOTES: 
-//
 //Checks the crc by processing the received frame's payload
 //We are checking crc by recalculating at the received end. Just like a checksum
 bool QtTerminal::checkCRC(QByteArray receivedFrame)
@@ -719,21 +719,21 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: createAckFrame
 //
 // REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Angus Lam
 //
-// PROGRAMMER: 
+// PROGRAMMER: Angus Lam
 //
-// INTERFACE: 
+// INTERFACE: QByteArray QtTerminal::createAckFrame()
 //
-// RETURNS:
+// RETURNS: ackFrame
+// A QByteArray of an ack.
 //
 // NOTES: 
 //
-//Creates the ack frame and returns it
 QByteArray QtTerminal::createAckFrame()
 {
 	QByteArray ackFrame;
@@ -747,21 +747,21 @@ QByteArray QtTerminal::createAckFrame()
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: createEnqFrame
 //
 // REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Angus Lam
 //
-// PROGRAMMER: 
+// PROGRAMMER: Angus Lam
 //
-// INTERFACE: 
+// INTERFACE: QByteArray QtTerminal::createEnqFrame()
 //
-// RETURNS:
+// RETURNS: enqFrame
+// A QByteArray of an enq.
 //
 // NOTES: 
 //
-//Creates the enq frame and returns it
 QByteArray QtTerminal::createEnqFrame()
 {
 	QByteArray enqFrame;
