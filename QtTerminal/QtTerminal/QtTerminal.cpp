@@ -232,6 +232,7 @@ void QtTerminal::readFile()
 				for (const QByteArray& packet : packets)
 				{
 					console.putData(packet);
+					port.write("SENDING A PACKET\n");
 					port.write(packet);
 				}
 				packets.clear();
@@ -325,7 +326,7 @@ void QtTerminal::writeFile()
 		int packetCount = 0;
 		for (const QByteArray& packet : packets)
 		{
-			console.putData(packet);
+ 			console.putData(packet);
 			port.write(packet);
 		}
 		break;
@@ -420,7 +421,7 @@ QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 //Returns the payload if successful
 QByteArray QtTerminal::parseDataFrame(QByteArray receivedFrame)
 {
-	if (receivedFrame.at(0) != 0x02 || receivedFrame.at(1) != 0x16)
+	if (receivedFrame.at(0) != 0x16 || receivedFrame.at(1) != 0x02)
 	{
 		return nullptr;
 	}
