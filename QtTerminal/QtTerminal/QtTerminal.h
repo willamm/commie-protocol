@@ -51,6 +51,7 @@ private:
 	Console console;
 	QSerialPort port;
 
+	int packetCount;
 	std::vector<QByteArray> packets;
 	QTimer timer; // for timeouts
 };

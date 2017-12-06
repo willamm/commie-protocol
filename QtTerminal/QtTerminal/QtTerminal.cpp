@@ -7,6 +7,7 @@ QtTerminal::QtTerminal(QWidget *parent)
 	: QMainWindow(parent)
 	, console(this)
 	, port(this)
+	, packetCount(0)
 {
 	timer.setSingleShot(true);
 	ui.setupUi(this);
@@ -96,8 +97,7 @@ void QtTerminal::packetReceived(std::string packet)
 
 void QtTerminal::ackReceived(const QByteArray& ack)
 {
-	port.write(ack);
-	port.flush();
+	
 }
 
 void QtTerminal::handleError(QSerialPort::SerialPortError error)
@@ -107,12 +107,12 @@ void QtTerminal::handleError(QSerialPort::SerialPortError error)
 void QtTerminal::handleBytesWritten(qint64 bytes)
 {
 	// When this event is fired, send ACK
-
+	console.putData("ACK\n");
 }
 
 void QtTerminal::handleTimeout()
 {
-	console.putData("Time out");
+	console.putData("Time out...");
 }
 
 void QtTerminal::openFileDialog()
@@ -126,9 +126,11 @@ void QtTerminal::readFile()
 {
 	char readBuffer[PACKET_SIZE];
 	port.read(readBuffer, PACKET_SIZE);
+	if (!timer.isActive())
+	{
+		timer.start(1000);
+	}
 	console.putData(readBuffer);
-	emit sendAck(createAckFrame());
-	disconnect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);
 }
 
 //Processes the file by packetizing it in 512 byte chunks.
@@ -222,11 +224,9 @@ QByteArray QtTerminal::parseFrame(QByteArray receivedFrame)
 	{
 		return nullptr;
 	}
-
 	if (checkCRC(receivedFrame)) {
             return receivedFrame.mid(2,512);
 	}
-
 	return nullptr;
 }
 
@@ -261,12 +261,13 @@ void QtTerminal::writeFile(QString fileName)
 	//Send 10 packets
 	std::ifstream fileStream(fileName.toStdString());
 	processFile(fileStream);
-	int packetCount = 0;
-	for (const QByteArray& packet : packets)
+	if (packetCount == 10)
 	{
-		port.write(packet);
-		// wait to receive ACK
+		// should go to link reset
+		return;
 	}
+	port.write(packets[packetCount++]);
+	timer.start(1000);
 }
 
 //Creates the ack frame and returns it
