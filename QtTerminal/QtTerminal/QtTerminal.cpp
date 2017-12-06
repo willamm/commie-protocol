@@ -19,7 +19,6 @@ QtTerminal::QtTerminal(QWidget *parent)
 
 QtTerminal::~QtTerminal()
 {
-	delete data;
 }
 
 //Initial actions executed during QtTerminal instantiation
@@ -104,7 +103,8 @@ void QtTerminal::handleError(QSerialPort::SerialPortError error)
 
 void QtTerminal::handleBytesWritten(qint64 bytes)
 {
-	
+	// When this event is fired, send ACK
+
 }
 
 void QtTerminal::handleTimeout()
@@ -138,7 +138,7 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 	//The file iterator
 	std::istreambuf_iterator<char> file_iterator(file);
 	//The queue meant to hold data from the file
-	data = new std::queue<char>();
+	std::queue<char> data;
 	//Keeps track of how many bytes processed
 	unsigned count = 0;
 
@@ -146,13 +146,13 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 	while (file_iterator != std::istreambuf_iterator<char>())
 	{
 		//Push each character into the queue
-		data->push(*file_iterator);
+		data.push(*file_iterator);
 
 		//Splits it into 512 bytes
 		if ((count % 512) == 0)
 		{
 			//Pass in the 512 bytes of data in the queue and packetizes it
-			packetizeFile(data);
+			packets.push_back(packetizeFile(data));
 		}
 
 		//increment count and move the iterator one byte over
@@ -161,7 +161,7 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 	}
 
 	//Packetize the remaining data
-	packetizeFile(data);
+	packets.push_back(packetizeFile(data));
 
 	//Return the # of processed bytes
 	return count;
@@ -172,7 +172,7 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 //Returns the dataframe as a QByteArray.
 //
 //Author: Angus Lam
-QByteArray QtTerminal::packetizeFile(std::queue<char>* data)
+QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 {
 	//This will be the data frame
 	QByteArray dataFrame;
@@ -183,12 +183,12 @@ QByteArray QtTerminal::packetizeFile(std::queue<char>* data)
 	dataFrame.append(0x02);
 
 	//While there are still 512 bytes in the queue
-	while (!data->empty())
+	while (!data.empty())
 	{
 		//Append to the byte array
-		dataFrame.append(data->front());
+		dataFrame.append(data.front());
 		//Gotta pop afterwards because c++ containers are weird
-		data->pop();
+		data.pop();
 	}
 
 	//Stuffs the byte array with nulls until it is 514 bytes
@@ -259,15 +259,15 @@ void QtTerminal::writeFile(QString fileName)
 	std::ifstream fileStream(fileName.toStdString());
 	processFile(fileStream);
 	int packetCount = 0;
-	int qCount = 0;
-	while (!data->empty() && packetCount <= 10)
+	for (const auto& packet : packets)
 	{
-		//port.write(data);
-		//packetCount++;
+		port.write(packet);
+		// wait for ACK or timeout
+		packetCount++;
+		if (packetCount == 10)
+		{
+			// give control to other side
+		}
 	}
-	//port.write(fileName.toLocal8Bit());
-//	console.putData("Packet sent");
-	//wait for ACK
-	timer.start(2000);
 }
 		

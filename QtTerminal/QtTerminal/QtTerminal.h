@@ -34,7 +34,7 @@ public slots:
 	void initSerialPort(QAction* triggeredPortName);
 	void addAvailablePorts();
 	unsigned processFile(std::ifstream& file);
-	QByteArray packetizeFile(std::queue<char>* data);
+	QByteArray packetizeFile(std::queue<char> data);
 	bool checkCRC(QByteArray receivedFrame);
 	QByteArray parseFrame(QByteArray receivedFrame);
 	void packetReceived(std::string packet);
@@ -48,7 +48,6 @@ private:
 	Console console;
 	QSerialPort port;
 
-	std::queue<char>* data;
-
+	std::vector<QByteArray> packets;
 	QTimer timer; // for timeouts
 };
