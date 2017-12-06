@@ -124,14 +124,7 @@ void QtTerminal::handleTimeout()
 	console.putData("Time out");
 }
 
-void QtTerminal::bidForLine() 
-{
-	char ENQ = 0x25;
-	QString toSend;
-	toSend = ENQ;
-	console.putData("Bidding for line...");
-	port.write("0x25");
-}
+
 
 // Creates a timeout, lasting (2000ms), then calls update()
 void QtTerminal::genericTimeout()
@@ -181,8 +174,9 @@ void QtTerminal::readFile()
 
 			if (controlChar == 0x05) //If you receive an ENQ
 			{
+				console.putData("received ENQ");
 				//send an ack
-				//Set to a receive state
+				state = 2; //Set to a receive state
 			}
 
 			break;
@@ -198,7 +192,23 @@ void QtTerminal::readFile()
 
 			break;
 		}
-		case 3: //transmit state
+		case 3: // bid for line state
+		{
+			//Read in 2 bytes, the size of the control frame
+			QByteArray controlFrame = port.read(2);
+			//Parse the control frame, and receive the control character
+			char controlChar = parseControlFrame(controlFrame);
+			//Can use this to check the frame
+			console.putData(controlFrame);
+
+			if (controlChar == 0x06) //If you receive an ACK
+			{
+				state = 4; // go to send state
+			}
+
+			break;
+		}
+		case 4: // send state
 		{
 			//Read in 2 bytes, the size of the control frame
 			QByteArray controlFrame = port.read(2);
@@ -326,7 +336,7 @@ char QtTerminal::parseControlFrame(QByteArray receivedFrame)
 		return 0;
 	}
 
-	if (receivedFrame.at(0) == 0x05 || receivedFrame.at(0) == 0x06)
+	if (receivedFrame.at(1) == 0x05 || receivedFrame.at(1) == 0x06)
 	{
 		return receivedFrame.at(1);
 	}
@@ -362,6 +372,31 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
 
 void QtTerminal::writeFile(QString fileName)
 {
+
+	// Before writing, 
+	switch (state) 
+	{
+		case 1: // idle
+		{
+			console.putData("Bidding for line...");
+			port.write(createEnqFrame());
+			state = 3; // trying to write while idling, good to bid for line.
+		}
+		case 2: // receive
+		{
+
+		}
+		case 3: // bid for line
+		{
+
+		}
+		case 4: // send
+		{
+
+		}
+	}
+
+
 	//Send 10 packets
 
 	std::ifstream fileStream(fileName.toStdString());

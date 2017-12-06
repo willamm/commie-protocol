@@ -51,7 +51,6 @@ public slots:
 
 	void genericTimeout();
 	void randomTimeout();
-	void bidForLine();
 
 private:
 	unsigned state; //1 = idle, 2 = receive, 3 = transmit
