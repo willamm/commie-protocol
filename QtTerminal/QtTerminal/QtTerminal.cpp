@@ -336,7 +336,7 @@ QByteArray QtTerminal::parseDataFrame(QByteArray receivedFrame)
 //Returns 0 if failed
 char QtTerminal::parseControlFrame(QByteArray receivedFrame)
 {
-	if (receivedFrame.at(0) != 0x02)
+	if (receivedFrame.at(0) != 0x16)
 	{
 		return 0;
 	}
