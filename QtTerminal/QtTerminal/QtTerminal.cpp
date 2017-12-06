@@ -18,6 +18,7 @@ QtTerminal::QtTerminal(QWidget *parent)
 	ui.actionDisconnect->setEnabled(false);
 	ui.actionSend_File->setEnabled(false);
 	connect(&timer, &QTimer::timeout, this, &QtTerminal::handleTimeout);
+	state = 1; //set to idle
 }
 
 QtTerminal::~QtTerminal()
@@ -102,6 +103,13 @@ void QtTerminal::ackReceived(const QByteArray& ack)
 
 void QtTerminal::handleError(QSerialPort::SerialPortError error)
 {
+	if (error != QSerialPort::NoError)
+	{
+		QMessageBox msgBox;
+		msgBox.setText("Error sending the file");
+		msgBox.exec();		
+		QCoreApplication::exit(1);
+	}
 }
 
 void QtTerminal::handleBytesWritten(qint64 bytes)
@@ -113,6 +121,33 @@ void QtTerminal::handleBytesWritten(qint64 bytes)
 void QtTerminal::handleTimeout()
 {
 	console.putData("Time out...");
+}
+
+void QtTerminal::bidForLine() 
+{
+	char ENQ = 0x25;
+	QString toSend;
+	toSend = ENQ;
+	console.putData("Bidding for line...");
+	port.write("0x25");
+}
+
+// Creates a timeout, lasting (2000ms), then calls update()
+void QtTerminal::genericTimeout()
+{
+	QTimer *genericTimeout = new QTimer(this);
+	genericTimeout->setSingleShot(true);
+	connect(genericTimeout, SIGNAL(timeout()), this, SLOT(update()));
+	genericTimeout->start(2000);
+}
+
+// Creates a timeout, lasting (2000ms + (100ms * rand(1...10))), then calls update()
+void QtTerminal::randomTimeout()
+{
+	QTimer *randomTimeout = new QTimer(this);
+	randomTimeout->setSingleShot(true);
+	connect(randomTimeout, SIGNAL(timeout()), this, SLOT(update()));
+	randomTimeout->start(2000 + (100 * ((qrand() % 10) + 1)));
 }
 
 void QtTerminal::openFileDialog()
@@ -131,6 +166,60 @@ void QtTerminal::readFile()
 		timer.start(1000);
 	}
 	console.putData(readBuffer);
+	emit sendAck(createAckFrame());
+	disconnect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);
+	//Will's block of code
+//>>>>>>> 337bde43f2a807e7aea950edbdee1dde69bb8e16
+//
+//
+//	//Angus's block of code
+//	switch (state)
+//	{
+//	case 1: //idle state
+//	{
+//		//Read in 2 bytes, the size of the control frame
+//		QByteArray controlFrame = port.read(2);
+//		//Parse the control frame, and receive the control character
+//		char controlChar = parseControlFrame(controlFrame);
+//		//Can use this to check the frame
+//		console.putData(controlFrame);
+//
+//		if (controlChar == 0x05) //If you receive an ENQ
+//		{
+//			//send an ack
+//			//Set to a receive state
+//		}
+//
+//		break;
+//	}
+//	case 2: //receive state
+//	{
+//		//Read in 518 bytes, the size of the data frame
+//		QByteArray dataFrame = port.read(518);
+//		//Parse the control frame, and receive the payload
+//		QByteArray data = parseDataFrame(dataFrame);
+//		//Print the payload in console
+//		console.putData(data);
+//
+//		break;
+//	}
+//	case 3: //transmit state
+//	{
+//		//Read in 2 bytes, the size of the control frame
+//		QByteArray controlFrame = port.read(2);
+//		//Parse the control frame, and receive the control character
+//		char controlChar = parseControlFrame(controlFrame);
+//		//Can use this to check the frame
+//		console.putData(controlFrame);
+//
+//		if (controlChar == 0x06) //If you receive an ACK
+//		{
+//			//send a packet
+//		}
+//
+//		break;
+//	}
+//	}
 }
 
 //Processes the file by packetizing it in 512 byte chunks.
@@ -145,7 +234,7 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 	//The queue meant to hold data from the file
 	std::queue<char> data;
 	//Keeps track of how many bytes processed
-	unsigned count = 0;
+	unsigned count = 1;
 
 	//While it is not EOF
 	while (file_iterator != std::istreambuf_iterator<char>())
@@ -216,9 +305,9 @@ QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 }
 
 //This parses the frame
-//Returns nullptr if syn or stx bit is not present
+//Returns nullptr if syn or stx bit is not present, crc failed
 //Returns the payload if successful
-QByteArray QtTerminal::parseFrame(QByteArray receivedFrame)
+QByteArray QtTerminal::parseDataFrame(QByteArray receivedFrame)
 {
 	if (receivedFrame.at(0) != 0x02 || receivedFrame.at(1) != 0x16)
 	{
@@ -228,6 +317,24 @@ QByteArray QtTerminal::parseFrame(QByteArray receivedFrame)
             return receivedFrame.mid(2,512);
 	}
 	return nullptr;
+}
+
+//This parses a control frame
+//Returns the control character if present
+//Returns 0 if failed
+char QtTerminal::parseControlFrame(QByteArray receivedFrame)
+{
+	if (receivedFrame.at(0) != 0x02)
+	{
+		return 0;
+	}
+
+	if (receivedFrame.at(0) == 0x05 || receivedFrame.at(0) == 0x06)
+	{
+		return receivedFrame.at(1);
+	}
+
+	return 0;
 }
 
 //Checks the crc by processing the received frame's payload
@@ -259,6 +366,7 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
 void QtTerminal::writeFile(QString fileName)
 {
 	//Send 10 packets
+
 	std::ifstream fileStream(fileName.toStdString());
 	processFile(fileStream);
 	if (packetCount == 10)

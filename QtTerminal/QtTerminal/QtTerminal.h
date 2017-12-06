@@ -5,12 +5,14 @@
 #include "Console.h"
 #include <QSerialPort>
 #include <QFileDialog>
+#include <qtimer.h>
 #include <QSerialPortInfo>
 #include <fstream>
 #include <queue>
 #include <QTimer>
 
 #include "CRC.h"
+#include <QMessageBox>
 
 class QtTerminal : public QMainWindow
 {
@@ -36,7 +38,8 @@ public slots:
 	unsigned processFile(std::ifstream& file);
 	QByteArray packetizeFile(std::queue<char> data);
 	bool checkCRC(QByteArray receivedFrame);
-	QByteArray parseFrame(QByteArray receivedFrame);
+	QByteArray parseDataFrame(QByteArray receivedFrame);
+	char parseControlFrame(QByteArray receivedFrame);
 	void packetReceived(std::string packet);
 	void ackReceived(const QByteArray& ack);
 	void handleError(QSerialPort::SerialPortError error);
@@ -46,7 +49,12 @@ public slots:
 
 	void handleBytesWritten(qint64 bytes);
 
+	void genericTimeout();
+	void randomTimeout();
+	void bidForLine();
+
 private:
+	unsigned state; //1 = idle, 2 = receive, 3 = transmit
 	Ui::QtTerminalClass ui;
 	Console console;
 	QSerialPort port;
