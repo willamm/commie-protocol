@@ -22,6 +22,7 @@ void QtTerminal::initActionConnections()
 	connect(this, &QtTerminal::packetSent, this, &QtTerminal::packetReceived);
 	connect(&port, &QSerialPort::errorOccurred, this, &QtTerminal::handleError);
 	connect(&port, &QSerialPort::readyRead, this, &QtTerminal::readFile);
+	connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::)
 	//connect(this, QtTerminal::ackSent, this, QtTerminal::ackReceived);
 	connect(ui.actionConnect, &QAction::triggered, this, [this]()
 	{
@@ -95,15 +96,18 @@ void QtTerminal::openFileDialog()
 
 void QtTerminal::readFile()
 {
-	char buf[512];
-	port.read(buf, 512);
+	char buf[518];
+	port.read(buf, 518);
+	//Do error detection before writing to console
 	console.putData(buf);
-	// should send an ACK here
+	// send an ACK
 }
 
 void QtTerminal::writeFile(QString fileName)
 {
+	//Send 10 packets
 	port.write(fileName.toLocal8Bit());
-
+	console.putData("Packet sent");
+	//wait for ACK
 }
 		
