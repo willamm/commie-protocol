@@ -390,12 +390,13 @@ void QtTerminal::writeFile(QString fileName)
 		}
 		case 2: // receive
 		{
-
+			break;
 		}
 		case 3: // bid for line
 		{
 			// check for ACK
 			// move to state send
+			break;
 		}
 		case 4: // send
 		{
