@@ -162,7 +162,7 @@ void QtTerminal::readFile()
 	{
 		case 1: //idle state
 		{
-			console.putData("Idle state\n");
+			//console.putData("Idle state\n");
 			//Read in 2 bytes, the size of the control frame
 			QByteArray controlFrame = port.read(2);
 			//Parse the control frame, and receive the control character
@@ -176,8 +176,8 @@ void QtTerminal::readFile()
 				//send an ack
 				console.putData("sending ACK\n");
 				nextTime = t.currentTime();
-				nextTime.addMSecs(2000);
-				console.putData("starting timer\n");
+				nextTime.addMSecs(10000);
+				console.putData("set timeout to 10 seconds\n");
 				port.write(createAckFrame());
 				state = 2; //Set to a receive state
 			}
@@ -191,8 +191,12 @@ void QtTerminal::readFile()
 			QByteArray dataFrame = port.read(518);
 			//Parse the control frame, and receive the payload
 			QByteArray data = parseDataFrame(dataFrame);
+			console.putData(dataFrame);
 			//Print the payload in console
 			if (data != nullptr) {
+				nextTime = t.currentTime();
+				nextTime.addMSecs(2000);
+				console.putData("set timeout to 2 seconds\n");
 				console.putData(data);
 				port.write(createAckFrame());
 			}
@@ -200,7 +204,7 @@ void QtTerminal::readFile()
 			if (t.currentTime() >= nextTime)
 			{
 				state = 1;
-				console.putData("Going back to idle\n");
+				console.putData("Going back to idle from receive state\n");
 			}
 			break;
 		}
@@ -217,7 +221,20 @@ void QtTerminal::readFile()
 			if (controlChar == 0x06) //If you receive an ACK
 			{
 				console.putData("ACK for bid received\n");
+				nextTime = t.currentTime();
+				nextTime.addMSecs(2000);
+				console.putData("set timeout to 2 seconds\n");
 				state = 4; // go to send state
+				//Send the file, test
+				std::ifstream fileStream(fileName.toStdString());
+				processFile(fileStream);
+				int packetCount = 0;
+				for (const QByteArray& packet : packets)
+				{
+					console.putData(packet);
+					port.write(packet);
+				}
+				packets.clear();
 			}
 
 			QTime time = QTime::currentTime();
@@ -225,7 +242,7 @@ void QtTerminal::readFile()
 			if (time >= nextTime)
 			{
 				state = 1;
-				console.putData("Going back to idle\n");
+				console.putData("Going back to idle from bidding state\n");
 			}
 			
 			break;
@@ -242,11 +259,77 @@ void QtTerminal::readFile()
 
 			if (controlChar == 0x06) //If you receive an ACK
 			{
+				console.putData("set timeout to 2 seconds\n");
+				nextTime = t.currentTime();
+				nextTime.addMSecs(2000);
 				//send a packet
 			}
 
+			QTime time = QTime::currentTime();
+
+			if (time >= nextTime)
+			{
+				state = 1;
+				console.putData("Going back to idle from send state\n");
+			}
 			break;
 		}
+	}
+}
+
+void QtTerminal::writeFile()
+{
+	// Before writing, 
+	switch (state)
+	{
+
+	case 1: // idle
+	{
+		console.putData("Bidding for line...\n");
+		console.putData("set timeout to 2 seconds\n");
+		nextTime = t.currentTime();
+		nextTime.addMSecs(2000);
+		console.putData("starting timer\n");
+		console.putData("Sending ENQ\n");
+		port.write(createEnqFrame());
+		state = 3; // trying to write while idling, good to bid for line.
+		break;
+	}
+	case 2: // receive
+	{
+		port.write(createAckFrame());
+		break;
+	}
+	case 3: // bid for line
+	{
+		console.putData("Bidding state\n");
+
+		console.putData("sending ENQ");
+		port.write(createEnqFrame());
+
+		QTime time = QTime::currentTime();
+
+		if (time >= nextTime)
+		{
+			state = 1;
+			console.putData("Going back to idle from bidding state\n");
+		}
+		break;
+	}
+	case 4: // send
+	{
+		console.putData("ENTERED SEND STATE\n");
+		//Send the file, test
+		std::ifstream fileStream(fileName.toStdString());
+		processFile(fileStream);
+		int packetCount = 0;
+		for (const QByteArray& packet : packets)
+		{
+			console.putData(packet);
+			port.write(packet);
+		}
+		break;
+	}
 	}
 }
 
@@ -323,10 +406,10 @@ QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 	//dataFrame.data() returns a char* to the beginning of the array, increment by 2 to create crc from payload
     quint32 crc = CRC::Calculate(dataFrame.right(512), sizeof(dataFrame.right(512)), CRC::CRC_32());
 	//Append the crc to the end of the array, bitshifting a byte at a time
-	dataFrame.append(quint8(crc >> 24));
-	dataFrame.append(quint8(crc >> 16));
-	dataFrame.append(quint8(crc >> 8));
-	dataFrame.append(quint8(crc));
+	dataFrame.append(quint8(crc >> 24) && 0xFF);
+	dataFrame.append(quint8(crc >> 16) && 0xFF);
+	dataFrame.append(quint8(crc >> 8) && 0xFF);
+	dataFrame.append(quint8(crc) && 0xFF);
 
 	//Return the frame
 	return dataFrame;
@@ -381,61 +464,16 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
     //Calculate the crc
     quint32 crc_int = CRC::Calculate(payload, sizeof(payload), CRC::CRC_32());
     //Append the crc to the end of the array, bitshifting a byte at a time
-    crc.append(quint8(crc_int >> 24));
-    crc.append(quint8(crc_int >> 16));
-    crc.append(quint8(crc_int >> 8));
-    crc.append(quint8(crc_int));
+    crc.append(quint8(crc_int >> 24) && 0xFF);
+    crc.append(quint8(crc_int >> 16) && 0xFF);
+    crc.append(quint8(crc_int >> 8) && 0xFF);
+    crc.append(quint8(crc_int) && 0xFF);
 
 	if (crc == receivedCrc) {
 		return 1;
 	}
 
 	return 0;
-}
-
-void QtTerminal::writeFile()
-{
-	// Before writing, 
-	switch (state) 
-	{
-
-		case 1: // idle
-		{
-			console.putData("Bidding for line...\n");
-			nextTime = t.currentTime();
-			nextTime.addMSecs(2000);
-			console.putData("starting timer\n");
-
-			port.write(createEnqFrame());
-			state = 3; // trying to write while idling, good to bid for line.
-			break;
-		}
-		case 2: // receive
-		{
-			break;
-		}
-		case 3: // bid for line
-		{
-			console.putData("Bidding state");
-
-			port.write(createEnqFrame());
-			break;
-		}
-		case 4: // send
-		{
-			console.putData("ENTERED SEND STATE\n");
-			//Send 10 packets
-			std::ifstream fileStream(fileName.toStdString());
-			processFile(fileStream);
-			int packetCount = 0;
-			for (const QByteArray& packet : packets)
-			{
-				console.putData(packet);
-				port.write(packet);
-			}
-			break;
-		}
-	}
 }
 
 //Creates the ack frame and returns it

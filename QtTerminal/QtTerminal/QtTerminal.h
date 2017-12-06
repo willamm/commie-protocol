@@ -53,7 +53,7 @@ public slots:
 	void randomTimeout();
 
 private:
-	unsigned state; //1 = idle, 2 = receive, 3 = transmit
+	unsigned state; //1 = idle, 2 = receive, 3 = bidding, 4 = send
 	Ui::QtTerminalClass ui;
 	Console console;
 	QSerialPort port;
