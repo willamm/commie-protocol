@@ -1,11 +1,14 @@
 #include "QtTerminal.h"
 
+
+static constexpr int PACKET_SIZE = 518;
 //Constructs the QtTerminal window
 QtTerminal::QtTerminal(QWidget *parent)
 	: QMainWindow(parent)
 	, console(this)
 	, port(this)
 {
+	timer.setSingleShot(true);
 	ui.setupUi(this);
 	setCentralWidget(&console);
 	initActionConnections();
@@ -13,6 +16,11 @@ QtTerminal::QtTerminal(QWidget *parent)
 	ui.actionConnect->setEnabled(false);
 	ui.actionDisconnect->setEnabled(false);
 	ui.actionSend_File->setEnabled(false);
+	connect(&timer, &QTimer::timeout, this, &QtTerminal::handleTimeout);
+}
+
+QtTerminal::~QtTerminal()
+{
 }
 
 //Initial actions executed during QtTerminal instantiation
@@ -23,10 +31,10 @@ void QtTerminal::initActionConnections()
 	// Opens QDialog to send file when Send File button is clicked
 	connect(ui.actionSend_File, &QAction::triggered, this, &QtTerminal::openFileDialog);
 	connect(this, &QtTerminal::fileSelected, this, &QtTerminal::writeFile);
-	connect(this, &QtTerminal::packetSent, this, &QtTerminal::packetReceived);
 	connect(&port, &QSerialPort::errorOccurred, this, &QtTerminal::handleError);
 	connect(&port, &QSerialPort::readyRead, this, &QtTerminal::readFile);
 	connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::handleBytesWritten);
+	connect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);
 	//connect(this, QtTerminal::ackSent, this, QtTerminal::ackReceived);
 	connect(ui.actionConnect, &QAction::triggered, this, [this]()
 	{
@@ -84,14 +92,15 @@ void QtTerminal::addAvailablePorts()
 	connect(portActions, &QActionGroup::triggered, this, &QtTerminal::initSerialPort);
 }
 
-//Creates the open file dialog
 void QtTerminal::packetReceived(std::string packet)
 {
 }
 
-void QtTerminal::ackReceived(std::string ack)
+void QtTerminal::ackReceived(const QByteArray& ack)
 {
 
+	port.write(ack);
+	port.flush();
 }
 
 void QtTerminal::handleError(QSerialPort::SerialPortError error)
@@ -107,6 +116,13 @@ void QtTerminal::handleError(QSerialPort::SerialPortError error)
 
 void QtTerminal::handleBytesWritten(qint64 bytes)
 {
+	// When this event is fired, send ACK
+
+}
+
+void QtTerminal::handleTimeout()
+{
+	console.putData("Time out");
 }
 
 void QtTerminal::genericTimeout()
@@ -134,15 +150,12 @@ void QtTerminal::openFileDialog()
 //Reads the file that the user selects in the terminal
 void QtTerminal::readFile()
 {
-	//This is from will's commit
-	char buf[518];
-	port.read(buf, 518);
-	console.putData(buf);
-	&QtTerminal::handleError;
-	QByteArray ACK;
-	ACK.append(0x06);
-	port.write(ACK);
-	//// should send an ACK here
+
+	char readBuffer[PACKET_SIZE];
+	port.read(readBuffer, PACKET_SIZE);
+	console.putData(readBuffer);
+	emit sendAck(createAckFrame());
+	disconnect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);
 }
 
 //Processes the file by packetizing it in 512 byte chunks.
@@ -155,7 +168,7 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 	//The file iterator
 	std::istreambuf_iterator<char> file_iterator(file);
 	//The queue meant to hold data from the file
-	std::queue<char>* data = new std::queue<char>();
+	std::queue<char> data;
 	//Keeps track of how many bytes processed
 	unsigned count = 0;
 
@@ -163,22 +176,22 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 	while (file_iterator != std::istreambuf_iterator<char>())
 	{
 		//Push each character into the queue
-		data->push(*file_iterator);
+		data.push(*file_iterator);
 
 		//Splits it into 512 bytes
 		if ((count % 512) == 0)
 		{
 			//Pass in the 512 bytes of data in the queue and packetizes it
-			packetizeFile(data);
+			packets.push_back(packetizeFile(data));
 		}
 
 		//increment count and move the iterator one byte over
 		count++;
-		file_iterator++;
+		++file_iterator;
 	}
 
 	//Packetize the remaining data
-	packetizeFile(data);
+	packets.push_back(packetizeFile(data));
 
 	//Return the # of processed bytes
 	return count;
@@ -189,7 +202,7 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 //Returns the dataframe as a QByteArray.
 //
 //Author: Angus Lam
-QByteArray QtTerminal::packetizeFile(std::queue<char>* data)
+QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 {
 	//This will be the data frame
 	QByteArray dataFrame;
@@ -200,12 +213,12 @@ QByteArray QtTerminal::packetizeFile(std::queue<char>* data)
 	dataFrame.append(0x02);
 
 	//While there are still 512 bytes in the queue
-	while (!data->empty())
+	while (!data.empty())
 	{
 		//Append to the byte array
-		dataFrame.append(data->front());
+		dataFrame.append(data.front());
 		//Gotta pop afterwards because c++ containers are weird
-		data->pop();
+		data.pop();
 	}
 
 	//Stuffs the byte array with nulls until it is 514 bytes
@@ -216,7 +229,7 @@ QByteArray QtTerminal::packetizeFile(std::queue<char>* data)
 
 	//Create the crc
 	//dataFrame.data() returns a char* to the beginning of the array, increment by 2 to create crc from payload
-        quint32 crc = CRC::Calculate(dataFrame.right(512), sizeof(dataFrame.right(512)), CRC::CRC_32());
+    quint32 crc = CRC::Calculate(dataFrame.right(512), sizeof(dataFrame.right(512)), CRC::CRC_32());
 	//Append the crc to the end of the array, bitshifting a byte at a time
 	dataFrame.append(quint8(crc >> 24));
 	dataFrame.append(quint8(crc >> 16));
@@ -273,14 +286,14 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
 void QtTerminal::writeFile(QString fileName)
 {
 	//Send 10 packets
-	port.write(fileName.toLocal8Bit());
-	console.putData("Packet sent");
-	//wait for ACK
-	char buf[518];
-	port.read(buf, 518);
-	if (buf != "0x06")
+
+	std::ifstream fileStream(fileName.toStdString());
+	processFile(fileStream);
+	int packetCount = 0;
+	for (const QByteArray& packet : packets)
 	{
-		//ACK not received
+		port.write(packet);
+		// wait to receive ACK
 	}
 }
 
@@ -301,7 +314,6 @@ QByteArray QtTerminal::createAckFrame()
 QByteArray QtTerminal::createEnqFrame()
 {
 	QByteArray enqFrame;
-
 	//Append SYN
 	enqFrame.append(0x16);
 	//Append ENQ
