@@ -89,10 +89,18 @@ void QtTerminal::packetReceived(std::string packet)
 
 void QtTerminal::ackReceived(std::string ack)
 {
+
 }
 
 void QtTerminal::handleError(QSerialPort::SerialPortError error)
 {
+	if (error != QSerialPort::NoError)
+	{
+		QMessageBox msgBox;
+		msgBox.setText("Error sending the file");
+		msgBox.exec();		
+		QCoreApplication::exit(1);
+	}
 }
 
 void QtTerminal::handleBytesWritten(qint64 bytes)
@@ -112,6 +120,7 @@ void QtTerminal::readFile()
 	char buf[518];
 	port.read(buf, 518);
 	console.putData(buf);
+	&QtTerminal::handleError;
 	//// should send an ACK here
 }
 

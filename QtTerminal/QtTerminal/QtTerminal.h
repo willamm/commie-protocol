@@ -9,6 +9,7 @@
 #include <fstream>
 #include <queue>
 #include "CRC.h"
+#include <QMessageBox>
 
 class QtTerminal : public QMainWindow
 {
