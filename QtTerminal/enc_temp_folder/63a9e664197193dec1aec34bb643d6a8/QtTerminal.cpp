@@ -178,7 +178,7 @@ void QtTerminal::readFile()
 				//send an ack
 				console.putData("sending ACK\n");
 				nextTime = t.currentTime();
-				nextTime.addMSecs(4000);
+				nextTime.addMSecs(2000);
 				console.putData("starting timer\n");
 				port.write(createAckFrame());
 				state = 2; //Set to a receive state
@@ -404,7 +404,7 @@ void QtTerminal::writeFile(QString fileName)
 			while (state == 1) {
 				console.putData("Bidding for line...\n");
 				nextTime = t.currentTime();
-				nextTime.addMSecs(4000);
+				nextTime.addMSecs(2000);
 				console.putData("starting timer\n");
 
 				if (port.write(createEnqFrame()) != -1) {
