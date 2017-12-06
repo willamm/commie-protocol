@@ -176,6 +176,7 @@ void QtTerminal::readFile()
 			{
 				console.putData("received ENQ");
 				//send an ack
+				console.putData("sending ACK");
 				port.write(createAckFrame());
 				state = 2; //Set to a receive state
 			}
@@ -184,6 +185,7 @@ void QtTerminal::readFile()
 		}
 		case 2: //receive state
 		{
+			console.putData("now in state receive");
 			//Read in 518 bytes, the size of the data frame
 			QByteArray dataFrame = port.read(518);
 			//Parse the control frame, and receive the payload
@@ -195,6 +197,7 @@ void QtTerminal::readFile()
 		}
 		case 3: // bid for line state
 		{
+			console.putData("bidding for line");
 			//Read in 2 bytes, the size of the control frame
 			QByteArray controlFrame = port.read(2);
 			//Parse the control frame, and receive the control character
@@ -204,6 +207,7 @@ void QtTerminal::readFile()
 
 			if (controlChar == 0x06) //If you receive an ACK
 			{
+				console.putData("ACK for bid received");
 				state = 4; // go to send state
 			}
 
@@ -382,6 +386,7 @@ void QtTerminal::writeFile(QString fileName)
 			console.putData("Bidding for line...");
 			port.write(createEnqFrame());
 			state = 3; // trying to write while idling, good to bid for line.
+			break;
 		}
 		case 2: // receive
 		{
@@ -402,6 +407,7 @@ void QtTerminal::writeFile(QString fileName)
 			{
 				port.write(packet);
 			}
+			break;
 		}
 	}
 }
