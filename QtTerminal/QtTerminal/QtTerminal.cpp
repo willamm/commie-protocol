@@ -46,19 +46,20 @@ static constexpr int PACKET_SIZE = 518;
 
 
 // 
-// FUNCTION: 
+// FUNCTION: QtTerminal
 //
-// REVISIONS: N/A
 //
-// DESIGNER:
+// DESIGNER: Mackenzie Craig, William Murphy
 //
-// PROGRAMMER: 
+// PROGRAMMER: Vafa Dehghan Saei, Angus Lam
 //
-// INTERFACE: 
+// INTERFACE: QtTerminal::QtTerminal(QWidget *parent)
+//				QWidget *parent: The parent Qt ui class
 //
-// RETURNS:
+// RETURNS: N/A Constructor
 //
 // NOTES: 
+// The constructor of the terminal which creates the ui, and initializez menu files. 
 //
 QtTerminal::QtTerminal(QWidget *parent)
 	: QMainWindow(parent)
@@ -77,24 +78,35 @@ QtTerminal::QtTerminal(QWidget *parent)
 	state = 1; //set to idle
 }
 
+// 
+// FUNCTION: :~QtTerminal()
+//
+// DESIGNER: Vafa Dehghan Saei, Mackenzie Craig
+//
+// PROGRAMMER: Angus Lam, William Murphy
+//
+// INTERFACE: QtTerminal::~QtTerminal()
+//
+// RETURNS: Void
+//
+// NOTES:  The destructor, not called
+//
 QtTerminal::~QtTerminal()
 {
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: initActionConnections
 //
-// REVISIONS: N/A
+// DESIGNER: Vafa Dehghan Saei, Angus Lam
 //
-// DESIGNER:
+// PROGRAMMER: Mackenzie Craig, William Murphy
 //
-// PROGRAMMER: 
+// INTERFACE: void QtTerminal::initActionConnections()
 //
-// INTERFACE: 
+// RETURNS: Void
 //
-// RETURNS:
-//
-// NOTES: 
+// NOTES:  Initializez the file buttons to do the proper action when clicked on. 
 //
 void QtTerminal::initActionConnections()
 {
@@ -129,19 +141,17 @@ void QtTerminal::initActionConnections()
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: QtTerminal::initSerialPort
 //
-// REVISIONS: N/A
+// DESIGNER: Vafa Dehghan Saei, William Murphy
 //
-// DESIGNER:
+// PROGRAMMER: Angus Lam
 //
-// PROGRAMMER: 
+// INTERFACE:  void QtTerminal::initSerialPort(QAction* triggeredPortName)
 //
-// INTERFACE: 
+// RETURNS: void
 //
-// RETURNS:
-//
-// NOTES: 
+// NOTES:  Initializez the serial port settings, such as baud rate. 
 //
 void QtTerminal::initSerialPort(QAction* triggeredPortName)
 {
@@ -163,19 +173,17 @@ void QtTerminal::initSerialPort(QAction* triggeredPortName)
 }
 
 // 
-// FUNCTION: 
+// FUNCTION: addAvailablePorts
 //
-// REVISIONS: N/A
+// DESIGNER: William Murphy
+// 
+// PROGRAMMER: Angus Lam
 //
-// DESIGNER:
+// INTERFACE:  void QtTerminal::addAvailablePorts()
 //
-// PROGRAMMER: 
+// RETURNS: void
 //
-// INTERFACE: 
-//
-// RETURNS:
-//
-// NOTES: 
+// NOTES: Searches the computer for availible com ports and adds it to the list for the user to select. 
 //
 void QtTerminal::addAvailablePorts()
 {
