@@ -9,19 +9,22 @@
 #include <QSerialPortInfo>
 #include <fstream>
 #include <queue>
+#include <QTimer>
+
 #include "CRC.h"
 
 class QtTerminal : public QMainWindow
 {
 	Q_OBJECT
 
+	
 signals:
 	void fileSelected(QString fileName);
-	void packetSent(std::string packet);
-	void ackSent(std::string ack);
+	void sendAck(const QByteArray& ack);
 
 public:
 	QtTerminal(QWidget *parent = Q_NULLPTR);
+	virtual ~QtTerminal();
 
 	void initActionConnections();
 
@@ -32,12 +35,13 @@ public slots:
 	void initSerialPort(QAction* triggeredPortName);
 	void addAvailablePorts();
 	unsigned processFile(std::ifstream& file);
-	QByteArray packetizeFile(std::queue<char>* data);
+	QByteArray packetizeFile(std::queue<char> data);
 	bool checkCRC(QByteArray receivedFrame);
 	QByteArray parseFrame(QByteArray receivedFrame);
 	void packetReceived(std::string packet);
-	void ackReceived(std::string ack);
+	void ackReceived(const QByteArray& ack);
 	void handleError(QSerialPort::SerialPortError error);
+	void handleTimeout();
 	QByteArray createAckFrame();
 	QByteArray createEnqFrame();
 
@@ -50,4 +54,7 @@ private:
 	Ui::QtTerminalClass ui;
 	Console console;
 	QSerialPort port;
+
+	std::vector<QByteArray> packets;
+	QTimer timer; // for timeouts
 };
