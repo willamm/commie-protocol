@@ -406,19 +406,6 @@ void QtTerminal::writeFile()
 			nextTime.addMSecs(2000);
 			console.putData("starting timer\n");
 
-
-
-			// start test
-			std::ifstream fileStream(fileName.toStdString());
-			processFile(fileStream);
-			int packetCount = 0;
-			for (const QByteArray& packet : packets)
-			{
-				console.putData(packet);
-				port.write(packet);
-			}
-			// end test
-
 			port.write(createEnqFrame());
 			state = 3; // trying to write while idling, good to bid for line.
 			break;
