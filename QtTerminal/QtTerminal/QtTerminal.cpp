@@ -32,8 +32,8 @@ void QtTerminal::initActionConnections()
 	connect(this, &QtTerminal::fileSelected, this, &QtTerminal::writeFile);
 	connect(&port, &QSerialPort::errorOccurred, this, &QtTerminal::handleError);
 	connect(&port, &QSerialPort::readyRead, this, &QtTerminal::readFile);
-	connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::handleBytesWritten);
-	connect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);
+	//connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::writeFile);
+	//connect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);
 	//connect(this, QtTerminal::ackSent, this, QtTerminal::ackReceived);
 	connect(ui.actionConnect, &QAction::triggered, this, [this]()
 	{
@@ -107,7 +107,7 @@ void QtTerminal::handleError(QSerialPort::SerialPortError error)
 	if (error != QSerialPort::NoError)
 	{
 		QMessageBox msgBox;
-		msgBox.setText("Error sending the file");
+		msgBox.setText("Error sending the file\n");
 		msgBox.exec();		
 		QCoreApplication::exit(1);
 	}
@@ -116,12 +116,11 @@ void QtTerminal::handleError(QSerialPort::SerialPortError error)
 void QtTerminal::handleBytesWritten(qint64 bytes)
 {
 	// When this event is fired, send ACK
-
 }
 
 void QtTerminal::handleTimeout()
 {
-	console.putData("Time out");
+	console.putData("Time out\n");
 }
 
 
@@ -146,8 +145,8 @@ void QtTerminal::randomTimeout()
 
 void QtTerminal::openFileDialog()
 {
-	QString sendFileName = QFileDialog::getOpenFileName(this, "Send File");
-	emit fileSelected(sendFileName);
+	fileName = QFileDialog::getOpenFileName(this, "Send File");
+	emit fileSelected(fileName);
 }
 
 //Reads the file that the user selects in the terminal
@@ -159,57 +158,129 @@ void QtTerminal::readFile()
 	emit sendAck(createAckFrame());
 	disconnect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);*/
 
-
-	//Angus's block of code
 	switch (state)
 	{
 		case 1: //idle state
 		{
+			//console.putData("Idle state\n");
 			//Read in 2 bytes, the size of the control frame
-			QByteArray controlFrame = port.read(2);
-			//Parse the control frame, and receive the control character
-			char controlChar = parseControlFrame(controlFrame);
-			//Can use this to check the frame
-			console.putData(controlFrame);
-
-			if (controlChar == 0x05) //If you receive an ENQ
+			if (port.bytesAvailable() >= 2)
 			{
-				console.putData("received ENQ");
-				//send an ack
-				state = 2; //Set to a receive state
-			}
+				QByteArray controlFrame = port.read(1);
 
+				//If you come across a SYN character
+				if (controlFrame.at(0) == 0x16)
+				{
+					//Append the next byte
+					controlFrame += port.read(1);
+
+					//Parse the control frame, and receive the control character
+					char controlChar = parseControlFrame(controlFrame);
+					//check
+					console.putData(controlFrame);
+
+					if (controlChar == 0x05) //If you receive an ENQ
+					{
+						console.putData("received ENQ\n");
+						//send an ack
+						console.putData("sending ACK\n");
+						nextTime = t.currentTime();
+						nextTime.addMSecs(10000);
+						console.putData("set timeout to 10 seconds\n");
+						port.write(createAckFrame());
+						port.clear(QSerialPort::Input);
+						state = 2; //Set to a receive state
+					}
+				}
+			}
 			break;
 		}
 		case 2: //receive state
 		{
-			//Read in 518 bytes, the size of the data frame
-			QByteArray dataFrame = port.read(518);
-			//Parse the control frame, and receive the payload
-			QByteArray data = parseDataFrame(dataFrame);
-			//Print the payload in console
-			console.putData(data);
+			//console.putData("now in state receive\n");
+			if (port.bytesAvailable() >= 518)
+			{	
+				QByteArray dataFrame = port.read(1);
 
+				//If you come across a SYN character
+				if (dataFrame.at(0) == 0x16)
+				{
+					dataFrame.append(port.read(1));
+
+					if (dataFrame.at(1) == 0x02) {
+						dataFrame.append(port.read(516));
+						int a = dataFrame.size();
+						//Parse the control frame, and receive the payload
+						QByteArray data = parseDataFrame(dataFrame);
+						//console.putData(dataFrame);
+						//Print the payload in console
+						if (data != nullptr) {
+							nextTime = t.currentTime();
+							nextTime.addMSecs(2000);
+							console.putData("set timeout to 2 seconds\n");
+							console.putData(data);
+							port.write(createAckFrame());
+						}
+					}
+				}
+
+			}
+			//if (t.currentTime() >= nextTime)
+			//{
+			//	state = 1;
+			//	console.putData("Going back to idle from receive state\n");
+			//}
 			break;
 		}
 		case 3: // bid for line state
 		{
+			console.putData("bidding for line\n");
 			//Read in 2 bytes, the size of the control frame
-			QByteArray controlFrame = port.read(2);
-			//Parse the control frame, and receive the control character
-			char controlChar = parseControlFrame(controlFrame);
-			//Can use this to check the frame
-			console.putData(controlFrame);
+			QByteArray controlFrame = port.read(1);
 
-			if (controlChar == 0x06) //If you receive an ACK
+			//If you come across a SYN character
+			if (controlFrame.at(0) == 0x16)
 			{
-				state = 4; // go to send state
+				//Append the next byte
+				controlFrame += port.read(1);
+				//Parse the control frame, and receive the control character
+				char controlChar = parseControlFrame(controlFrame);
+				//Can use this to check the frame
+				//console.putData(controlFrame);
+
+				if (controlChar == 0x06) //If you receive an ACK
+				{
+					console.putData("ACK for bid received\n");
+					nextTime = t.currentTime();
+					nextTime.addMSecs(2000);
+					console.putData("set timeout to 2 seconds\n");
+					state = 4; // go to send state
+					//Send the file, test
+					std::ifstream fileStream(fileName.toStdString());
+					processFile(fileStream);
+					int packetCount = 0;
+					for (const QByteArray& packet : packets)
+					{
+						console.putData(packet);
+						port.write(packet);
+					}
+					packets.clear();
+				}
 			}
 
+			QTime time = QTime::currentTime();
+
+			if (time >= nextTime)
+			{
+				state = 1;
+				console.putData("Going back to idle from bidding state\n");
+			}
+			
 			break;
 		}
 		case 4: // send state
 		{
+			console.putData("now in send state\n");
 			//Read in 2 bytes, the size of the control frame
 			QByteArray controlFrame = port.read(2);
 			//Parse the control frame, and receive the control character
@@ -219,11 +290,77 @@ void QtTerminal::readFile()
 
 			if (controlChar == 0x06) //If you receive an ACK
 			{
+				console.putData("set timeout to 2 seconds\n");
+				nextTime = t.currentTime();
+				nextTime.addMSecs(2000);
 				//send a packet
 			}
 
+			QTime time = QTime::currentTime();
+
+			if (time >= nextTime)
+			{
+				state = 1;
+				console.putData("Going back to idle from send state\n");
+			}
 			break;
 		}
+	}
+}
+
+void QtTerminal::writeFile()
+{
+	// Before writing, 
+	switch (state)
+	{
+
+	case 1: // idle
+	{
+		console.putData("Bidding for line...\n");
+		console.putData("set timeout to 2 seconds\n");
+		nextTime = t.currentTime();
+		nextTime.addMSecs(2000);
+		console.putData("starting timer\n");
+		console.putData("Sending ENQ\n");
+		port.write(createEnqFrame());
+		state = 3; // trying to write while idling, good to bid for line.
+		break;
+	}
+	case 2: // receive
+	{
+		port.write(createAckFrame());
+		break;
+	}
+	case 3: // bid for line
+	{
+		console.putData("Bidding state\n");
+
+		console.putData("sending ENQ");
+		port.write(createEnqFrame());
+
+		QTime time = QTime::currentTime();
+
+		if (time >= nextTime)
+		{
+			state = 1;
+			console.putData("Going back to idle from bidding state\n");
+		}
+		break;
+	}
+	case 4: // send
+	{
+		console.putData("ENTERED SEND STATE\n");
+		//Send the file, test
+		std::ifstream fileStream(fileName.toStdString());
+		processFile(fileStream);
+		int packetCount = 0;
+		for (const QByteArray& packet : packets)
+		{
+ 			console.putData(packet);
+			port.write(packet);
+		}
+		break;
+	}
 	}
 }
 
@@ -300,10 +437,10 @@ QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 	//dataFrame.data() returns a char* to the beginning of the array, increment by 2 to create crc from payload
     quint32 crc = CRC::Calculate(dataFrame.right(512), sizeof(dataFrame.right(512)), CRC::CRC_32());
 	//Append the crc to the end of the array, bitshifting a byte at a time
-	dataFrame.append(quint8(crc >> 24));
-	dataFrame.append(quint8(crc >> 16));
-	dataFrame.append(quint8(crc >> 8));
-	dataFrame.append(quint8(crc));
+	dataFrame.append(quint8(crc >> 24) & 0xFF);
+	dataFrame.append(quint8(crc >> 16) & 0xFF);
+	dataFrame.append(quint8(crc >> 8) & 0xFF);
+	dataFrame.append(quint8(crc) & 0xFF);
 
 	//Return the frame
 	return dataFrame;
@@ -314,11 +451,6 @@ QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 //Returns the payload if successful
 QByteArray QtTerminal::parseDataFrame(QByteArray receivedFrame)
 {
-	if (receivedFrame.at(0) != 0x02 || receivedFrame.at(1) != 0x16)
-	{
-		return nullptr;
-	}
-
 	if (checkCRC(receivedFrame)) {
             return receivedFrame.mid(2,512);
 	}
@@ -331,7 +463,7 @@ QByteArray QtTerminal::parseDataFrame(QByteArray receivedFrame)
 //Returns 0 if failed
 char QtTerminal::parseControlFrame(QByteArray receivedFrame)
 {
-	if (receivedFrame.at(0) != 0x02)
+	if (receivedFrame.at(0) != 0x16)
 	{
 		return 0;
 	}
@@ -349,64 +481,25 @@ char QtTerminal::parseControlFrame(QByteArray receivedFrame)
 bool QtTerminal::checkCRC(QByteArray receivedFrame)
 {
 	//Store the payload as the array from position 2, and 512 bytes after that
-        QByteArray payload = receivedFrame.mid(2,512);
-        //Store just the 4 rightmost bits
-        QByteArray receivedCrc = receivedFrame.right(4);
-        //Stores the calculated crc
-        QByteArray crc;
+    QByteArray payload = receivedFrame.mid(2,512);
+    //Store just the 4 rightmost bits
+    QByteArray receivedCrc = receivedFrame.right(4);
+    //Stores the calculated crc
+    QByteArray crc;
 
-        //Calculate the crc
-        quint32 crc_int = CRC::Calculate(payload, sizeof(payload), CRC::CRC_32());
-        //Append the crc to the end of the array, bitshifting a byte at a time
-        crc.append(quint8(crc_int >> 24));
-        crc.append(quint8(crc_int >> 16));
-        crc.append(quint8(crc_int >> 8));
-        crc.append(quint8(crc_int));
+    //Calculate the crc
+    quint32 crc_int = CRC::Calculate(payload, sizeof(payload), CRC::CRC_32());
+    //Append the crc to the end of the array, bitshifting a byte at a time
+    crc.append(quint8(crc_int >> 24) & 0xFF);
+    crc.append(quint8(crc_int >> 16) & 0xFF);
+    crc.append(quint8(crc_int >> 8) & 0xFF);
+    crc.append(quint8(crc_int) & 0xFF);
 
 	if (crc == receivedCrc) {
 		return 1;
 	}
 
 	return 0;
-}
-
-void QtTerminal::writeFile(QString fileName)
-{
-
-	// Before writing, 
-	switch (state) 
-	{
-		case 1: // idle
-		{
-			console.putData("Bidding for line...");
-			port.write(createEnqFrame());
-			state = 3; // trying to write while idling, good to bid for line.
-		}
-		case 2: // receive
-		{
-
-		}
-		case 3: // bid for line
-		{
-
-		}
-		case 4: // send
-		{
-
-		}
-	}
-
-
-	//Send 10 packets
-
-	std::ifstream fileStream(fileName.toStdString());
-	processFile(fileStream);
-	int packetCount = 0;
-	for (const QByteArray& packet : packets)
-	{
-		port.write(packet);
-		// wait to receive ACK
-	}
 }
 
 //Creates the ack frame and returns it
@@ -429,7 +522,7 @@ QByteArray QtTerminal::createEnqFrame()
 	//Append SYN
 	enqFrame.append(0x16);
 	//Append ENQ
-	enqFrame.append(0x06);
+	enqFrame.append(0x05);
 
 	return enqFrame;
 }
