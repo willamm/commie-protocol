@@ -433,7 +433,7 @@ QByteArray QtTerminal::createEnqFrame()
 	//Append SYN
 	enqFrame.append(0x16);
 	//Append ENQ
-	enqFrame.append(0x06);
+	enqFrame.append(0x05);
 
 	return enqFrame;
 }
