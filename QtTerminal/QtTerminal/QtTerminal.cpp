@@ -162,10 +162,10 @@ void QtTerminal::readFile()
 	{
 		case 1: //idle state
 		{
-			while (!port.atEnd())
+			//console.putData("Idle state\n");
+			//Read in 2 bytes, the size of the control frame
+			if (port.bytesAvailable() >= 2)
 			{
-				//console.putData("Idle state\n");
-				//Read in 2 bytes, the size of the control frame
 				QByteArray controlFrame = port.read(1);
 
 				//If you come across a SYN character
@@ -176,7 +176,7 @@ void QtTerminal::readFile()
 
 					//Parse the control frame, and receive the control character
 					char controlChar = parseControlFrame(controlFrame);
-					//Can use this to check the frame
+					//check
 					console.putData(controlFrame);
 
 					if (controlChar == 0x05) //If you receive an ENQ
@@ -197,10 +197,9 @@ void QtTerminal::readFile()
 		}
 		case 2: //receive state
 		{
-			//console.putData(port.readAll());
 			//console.putData("now in state receive\n");
-			while (!port.atEnd())
-			{
+			if (port.bytesAvailable() >= 518)
+			{	
 				QByteArray dataFrame = port.read(1);
 
 				//If you come across a SYN character
@@ -209,11 +208,11 @@ void QtTerminal::readFile()
 					dataFrame.append(port.read(1));
 
 					if (dataFrame.at(1) == 0x02) {
-						//Read in 518 bytes, the size of the data frame
-						dataFrame.append(port.readAll());
+						dataFrame.append(port.read(516));
+						int a = dataFrame.size();
 						//Parse the control frame, and receive the payload
 						QByteArray data = parseDataFrame(dataFrame);
-						console.putData(dataFrame);
+						//console.putData(dataFrame);
 						//Print the payload in console
 						if (data != nullptr) {
 							nextTime = t.currentTime();
@@ -224,8 +223,8 @@ void QtTerminal::readFile()
 						}
 					}
 				}
-			}
 
+			}
 			//if (t.currentTime() >= nextTime)
 			//{
 			//	state = 1;
@@ -438,10 +437,10 @@ QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 	//dataFrame.data() returns a char* to the beginning of the array, increment by 2 to create crc from payload
     quint32 crc = CRC::Calculate(dataFrame.right(512), sizeof(dataFrame.right(512)), CRC::CRC_32());
 	//Append the crc to the end of the array, bitshifting a byte at a time
-	dataFrame.append(quint8(crc >> 24) && 0xFF);
-	dataFrame.append(quint8(crc >> 16) && 0xFF);
-	dataFrame.append(quint8(crc >> 8) && 0xFF);
-	dataFrame.append(quint8(crc) && 0xFF);
+	dataFrame.append(quint8(crc >> 24) & 0xFF);
+	dataFrame.append(quint8(crc >> 16) & 0xFF);
+	dataFrame.append(quint8(crc >> 8) & 0xFF);
+	dataFrame.append(quint8(crc) & 0xFF);
 
 	//Return the frame
 	return dataFrame;
@@ -491,10 +490,10 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
     //Calculate the crc
     quint32 crc_int = CRC::Calculate(payload, sizeof(payload), CRC::CRC_32());
     //Append the crc to the end of the array, bitshifting a byte at a time
-    crc.append(quint8(crc_int >> 24) && 0xFF);
-    crc.append(quint8(crc_int >> 16) && 0xFF);
-    crc.append(quint8(crc_int >> 8) && 0xFF);
-    crc.append(quint8(crc_int) && 0xFF);
+    crc.append(quint8(crc_int >> 24) & 0xFF);
+    crc.append(quint8(crc_int >> 16) & 0xFF);
+    crc.append(quint8(crc_int >> 8) & 0xFF);
+    crc.append(quint8(crc_int) & 0xFF);
 
 	if (crc == receivedCrc) {
 		return 1;
