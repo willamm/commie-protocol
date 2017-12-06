@@ -176,6 +176,7 @@ void QtTerminal::readFile()
 			{
 				console.putData("received ENQ");
 				//send an ack
+				port.write(createAckFrame());
 				state = 2; //Set to a receive state
 			}
 
@@ -388,24 +389,20 @@ void QtTerminal::writeFile(QString fileName)
 		}
 		case 3: // bid for line
 		{
-
+			// check for ACK
+			// move to state send
 		}
 		case 4: // send
 		{
-
+			//Send 10 packets
+			std::ifstream fileStream(fileName.toStdString());
+			processFile(fileStream);
+			int packetCount = 0;
+			for (const QByteArray& packet : packets)
+			{
+				port.write(packet);
+			}
 		}
-	}
-
-
-	//Send 10 packets
-
-	std::ifstream fileStream(fileName.toStdString());
-	processFile(fileStream);
-	int packetCount = 0;
-	for (const QByteArray& packet : packets)
-	{
-		port.write(packet);
-		// wait to receive ACK
 	}
 }
 
