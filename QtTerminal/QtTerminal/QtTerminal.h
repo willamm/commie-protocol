@@ -40,6 +40,8 @@ public slots:
 	QByteArray createAckFrame();
 	QByteArray createEnqFrame();
 
+	void handleBytesWritten(qint64 bytes);
+
 private:
 	Ui::QtTerminalClass ui;
 	Console console;

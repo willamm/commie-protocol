@@ -24,6 +24,7 @@ void QtTerminal::initActionConnections()
 	connect(this, &QtTerminal::packetSent, this, &QtTerminal::packetReceived);
 	connect(&port, &QSerialPort::errorOccurred, this, &QtTerminal::handleError);
 	connect(&port, &QSerialPort::readyRead, this, &QtTerminal::readFile);
+	connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::handleBytesWritten);
 	//connect(this, QtTerminal::ackSent, this, QtTerminal::ackReceived);
 	connect(ui.actionConnect, &QAction::triggered, this, [this]()
 	{
@@ -91,6 +92,10 @@ void QtTerminal::ackReceived(std::string ack)
 }
 
 void QtTerminal::handleError(QSerialPort::SerialPortError error)
+{
+}
+
+void QtTerminal::handleBytesWritten(qint64 bytes)
 {
 }
 
@@ -237,7 +242,10 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
 
 void QtTerminal::writeFile(QString fileName)
 {
+	//Send 10 packets
 	port.write(fileName.toLocal8Bit());
+	console.putData("Packet sent");
+	//wait for ACK
 }
 
 //Creates the ack frame and returns it
