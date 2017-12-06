@@ -2,7 +2,21 @@
 
 
 static constexpr int PACKET_SIZE = 518;
-//Constructs the QtTerminal window
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 QtTerminal::QtTerminal(QWidget *parent)
 	: QMainWindow(parent)
 	, console(this)
@@ -24,7 +38,21 @@ QtTerminal::~QtTerminal()
 {
 }
 
-//Initial actions executed during QtTerminal instantiation
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 void QtTerminal::initActionConnections()
 {
 	// Opens QDialog to send file when Send File button is clicked
@@ -57,7 +85,21 @@ void QtTerminal::initActionConnections()
 	});
 }
 
-//This sets up the serial port that you connect to
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 void QtTerminal::initSerialPort(QAction* triggeredPortName)
 {
 	//Store the port name from QAction
@@ -77,7 +119,21 @@ void QtTerminal::initSerialPort(QAction* triggeredPortName)
 	}
 }
 
-//Connect to a port
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 void QtTerminal::addAvailablePorts()
 {
 	QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
@@ -102,6 +158,21 @@ void QtTerminal::ackReceived(const QByteArray& ack)
 	port.flush();
 }
 
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 void QtTerminal::handleError(QSerialPort::SerialPortError error)
 {
 	if (error != QSerialPort::NoError)
@@ -149,7 +220,21 @@ void QtTerminal::openFileDialog()
 	emit fileSelected(fileName);
 }
 
-//Reads the file that the user selects in the terminal
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 void QtTerminal::readFile()
 {
 	/*char readBuffer[PACKET_SIZE];
@@ -308,6 +393,21 @@ void QtTerminal::readFile()
 	}
 }
 
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 void QtTerminal::writeFile()
 {
 	// Before writing, 
@@ -364,11 +464,21 @@ void QtTerminal::writeFile()
 	}
 }
 
-//Processes the file by packetizing it in 512 byte chunks.
+// 
+// FUNCTION: 
 //
-//Returns the number of bytes processed.
+// REVISIONS: N/A
 //
-//Author: Angus Lam
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 unsigned QtTerminal::processFile(std::ifstream& file)
 {
 	//The file iterator
@@ -403,11 +513,21 @@ unsigned QtTerminal::processFile(std::ifstream& file)
 	return count;
 }
 
-//Packetizes data.
+// 
+// FUNCTION: 
 //
-//Returns the dataframe as a QByteArray.
+// REVISIONS: N/A
 //
-//Author: Angus Lam
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 {
 	//This will be the data frame
@@ -446,6 +566,21 @@ QByteArray QtTerminal::packetizeFile(std::queue<char> data)
 	return dataFrame;
 }
 
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 //This parses the frame
 //Returns nullptr if syn or stx bit is not present, crc failed
 //Returns the payload if successful
@@ -458,6 +593,21 @@ QByteArray QtTerminal::parseDataFrame(QByteArray receivedFrame)
 	return nullptr;
 }
 
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 //This parses a control frame
 //Returns the control character if present
 //Returns 0 if failed
@@ -476,6 +626,21 @@ char QtTerminal::parseControlFrame(QByteArray receivedFrame)
 	return 0;
 }
 
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 //Checks the crc by processing the received frame's payload
 //We are checking crc by recalculating at the received end. Just like a checksum
 bool QtTerminal::checkCRC(QByteArray receivedFrame)
@@ -502,6 +667,21 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
 	return 0;
 }
 
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 //Creates the ack frame and returns it
 QByteArray QtTerminal::createAckFrame()
 {
@@ -515,6 +695,21 @@ QByteArray QtTerminal::createAckFrame()
 	return ackFrame;
 }
 
+// 
+// FUNCTION: 
+//
+// REVISIONS: N/A
+//
+// DESIGNER:
+//
+// PROGRAMMER: 
+//
+// INTERFACE: 
+//
+// RETURNS:
+//
+// NOTES: 
+//
 //Creates the enq frame and returns it
 QByteArray QtTerminal::createEnqFrame()
 {
