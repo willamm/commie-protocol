@@ -191,8 +191,10 @@ void QtTerminal::readFile()
 			//Parse the control frame, and receive the payload
 			QByteArray data = parseDataFrame(dataFrame);
 			//Print the payload in console
-			console.putData(data);
-
+			if (data != nullptr) {
+				console.putData(data);
+				port.write(createAckFrame());
+			}
 			break;
 		}
 		case 3: // bid for line state
