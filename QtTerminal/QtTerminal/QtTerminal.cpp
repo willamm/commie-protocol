@@ -126,11 +126,11 @@ void QtTerminal::handleTimeout()
 
 void QtTerminal::bidForLine() 
 {
-	char ENQ = 0x25;
-	QString toSend;
-	toSend = ENQ;
+	char ENQ = 0x05;
+	QByteArray toSend;
+	toSend.append(ENQ);
 	console.putData("Bidding for line...");
-	port.write("0x25");
+	port.write(toSend);
 }
 
 // Creates a timeout, lasting (2000ms), then calls update()
@@ -181,6 +181,7 @@ void QtTerminal::readFile()
 
 			if (controlChar == 0x05) //If you receive an ENQ
 			{
+				console.putData("received ENQ");
 				//send an ack
 				//Set to a receive state
 			}
@@ -326,7 +327,7 @@ char QtTerminal::parseControlFrame(QByteArray receivedFrame)
 		return 0;
 	}
 
-	if (receivedFrame.at(0) == 0x05 || receivedFrame.at(0) == 0x06)
+	if (receivedFrame.at(1) == 0x05 || receivedFrame.at(1) == 0x06)
 	{
 		return receivedFrame.at(1);
 	}
