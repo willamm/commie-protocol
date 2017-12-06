@@ -107,7 +107,7 @@ void QtTerminal::handleError(QSerialPort::SerialPortError error)
 	if (error != QSerialPort::NoError)
 	{
 		QMessageBox msgBox;
-		msgBox.setText("Error sending the file");
+		msgBox.setText("Error sending the file\n");
 		msgBox.exec();		
 		QCoreApplication::exit(1);
 	}
@@ -121,7 +121,7 @@ void QtTerminal::handleBytesWritten(qint64 bytes)
 
 void QtTerminal::handleTimeout()
 {
-	console.putData("Time out");
+	console.putData("Time out\n");
 }
 
 
@@ -174,9 +174,9 @@ void QtTerminal::readFile()
 
 			if (controlChar == 0x05) //If you receive an ENQ
 			{
-				console.putData("received ENQ");
+				console.putData("received ENQ\n");
 				//send an ack
-				console.putData("sending ACK");
+				console.putData("sending ACK\n");
 				port.write(createAckFrame());
 				state = 2; //Set to a receive state
 			}
@@ -185,7 +185,7 @@ void QtTerminal::readFile()
 		}
 		case 2: //receive state
 		{
-			console.putData("now in state receive");
+			console.putData("now in state receive\n");
 			//Read in 518 bytes, the size of the data frame
 			QByteArray dataFrame = port.read(518);
 			//Parse the control frame, and receive the payload
@@ -199,7 +199,7 @@ void QtTerminal::readFile()
 		}
 		case 3: // bid for line state
 		{
-			console.putData("bidding for line");
+			console.putData("bidding for line\n");
 			//Read in 2 bytes, the size of the control frame
 			QByteArray controlFrame = port.read(2);
 			//Parse the control frame, and receive the control character
@@ -209,7 +209,7 @@ void QtTerminal::readFile()
 
 			if (controlChar == 0x06) //If you receive an ACK
 			{
-				console.putData("ACK for bid received");
+				console.putData("ACK for bid received\n");
 				state = 4; // go to send state
 			}
 
@@ -217,6 +217,7 @@ void QtTerminal::readFile()
 		}
 		case 4: // send state
 		{
+			console.putData("now in send state\n");
 			//Read in 2 bytes, the size of the control frame
 			QByteArray controlFrame = port.read(2);
 			//Parse the control frame, and receive the control character
@@ -385,7 +386,7 @@ void QtTerminal::writeFile(QString fileName)
 	{
 		case 1: // idle
 		{
-			console.putData("Bidding for line...");
+			console.putData("Bidding for line...\n");
 			port.write(createEnqFrame());
 			state = 3; // trying to write while idling, good to bid for line.
 			break;
