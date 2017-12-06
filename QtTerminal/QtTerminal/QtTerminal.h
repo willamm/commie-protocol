@@ -32,7 +32,7 @@ public:
 public slots:
 	void openFileDialog();
 	void readFile();
-	void writeFile(QString fileName);
+	void writeFile();
 	void initSerialPort(QAction* triggeredPortName);
 	void addAvailablePorts();
 	unsigned processFile(std::ifstream& file);
@@ -63,4 +63,5 @@ private:
 	bool state3timeout;
 	QTime t;
 	QTime nextTime;
+	QString fileName;
 };

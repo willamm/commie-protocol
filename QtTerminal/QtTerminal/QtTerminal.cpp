@@ -32,8 +32,8 @@ void QtTerminal::initActionConnections()
 	connect(this, &QtTerminal::fileSelected, this, &QtTerminal::writeFile);
 	connect(&port, &QSerialPort::errorOccurred, this, &QtTerminal::handleError);
 	connect(&port, &QSerialPort::readyRead, this, &QtTerminal::readFile);
-	connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::handleBytesWritten);
-	connect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);
+	//connect(&port, &QSerialPort::bytesWritten, this, &QtTerminal::writeFile);
+	//connect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);
 	//connect(this, QtTerminal::ackSent, this, QtTerminal::ackReceived);
 	connect(ui.actionConnect, &QAction::triggered, this, [this]()
 	{
@@ -116,7 +116,6 @@ void QtTerminal::handleError(QSerialPort::SerialPortError error)
 void QtTerminal::handleBytesWritten(qint64 bytes)
 {
 	// When this event is fired, send ACK
-
 }
 
 void QtTerminal::handleTimeout()
@@ -146,8 +145,8 @@ void QtTerminal::randomTimeout()
 
 void QtTerminal::openFileDialog()
 {
-	QString sendFileName = QFileDialog::getOpenFileName(this, "Send File");
-	emit fileSelected(sendFileName);
+	fileName = QFileDialog::getOpenFileName(this, "Send File");
+	emit fileSelected(fileName);
 }
 
 //Reads the file that the user selects in the terminal
@@ -159,7 +158,6 @@ void QtTerminal::readFile()
 	emit sendAck(createAckFrame());
 	disconnect(this, &QtTerminal::sendAck, this, &QtTerminal::ackReceived);*/
 
-	//Angus's block of code
 	switch (state)
 	{
 		case 1: //idle state
@@ -178,7 +176,7 @@ void QtTerminal::readFile()
 				//send an ack
 				console.putData("sending ACK\n");
 				nextTime = t.currentTime();
-				nextTime.addMSecs(4000);
+				nextTime.addMSecs(2000);
 				console.putData("starting timer\n");
 				port.write(createAckFrame());
 				state = 2; //Set to a receive state
@@ -222,7 +220,9 @@ void QtTerminal::readFile()
 				state = 4; // go to send state
 			}
 
-			if (t.currentTime() >= nextTime)
+			QTime time = QTime::currentTime();
+
+			if (time >= nextTime)
 			{
 				state = 1;
 				console.putData("Going back to idle\n");
@@ -372,19 +372,19 @@ char QtTerminal::parseControlFrame(QByteArray receivedFrame)
 bool QtTerminal::checkCRC(QByteArray receivedFrame)
 {
 	//Store the payload as the array from position 2, and 512 bytes after that
-        QByteArray payload = receivedFrame.mid(2,512);
-        //Store just the 4 rightmost bits
-        QByteArray receivedCrc = receivedFrame.right(4);
-        //Stores the calculated crc
-        QByteArray crc;
+    QByteArray payload = receivedFrame.mid(2,512);
+    //Store just the 4 rightmost bits
+    QByteArray receivedCrc = receivedFrame.right(4);
+    //Stores the calculated crc
+    QByteArray crc;
 
-        //Calculate the crc
-        quint32 crc_int = CRC::Calculate(payload, sizeof(payload), CRC::CRC_32());
-        //Append the crc to the end of the array, bitshifting a byte at a time
-        crc.append(quint8(crc_int >> 24));
-        crc.append(quint8(crc_int >> 16));
-        crc.append(quint8(crc_int >> 8));
-        crc.append(quint8(crc_int));
+    //Calculate the crc
+    quint32 crc_int = CRC::Calculate(payload, sizeof(payload), CRC::CRC_32());
+    //Append the crc to the end of the array, bitshifting a byte at a time
+    crc.append(quint8(crc_int >> 24));
+    crc.append(quint8(crc_int >> 16));
+    crc.append(quint8(crc_int >> 8));
+    crc.append(quint8(crc_int));
 
 	if (crc == receivedCrc) {
 		return 1;
@@ -393,24 +393,34 @@ bool QtTerminal::checkCRC(QByteArray receivedFrame)
 	return 0;
 }
 
-void QtTerminal::writeFile(QString fileName)
+void QtTerminal::writeFile()
 {
-
 	// Before writing, 
 	switch (state) 
 	{
+
 		case 1: // idle
 		{
-			while (state == 1) {
-				console.putData("Bidding for line...\n");
-				nextTime = t.currentTime();
-				nextTime.addMSecs(4000);
-				console.putData("starting timer\n");
+			console.putData("Bidding for line...\n");
+			nextTime = t.currentTime();
+			nextTime.addMSecs(2000);
+			console.putData("starting timer\n");
 
-				if (port.write(createEnqFrame()) != -1) {
-					state = 3; // trying to write while idling, good to bid for line.
-				}
+
+
+			// start test
+			std::ifstream fileStream(fileName.toStdString());
+			processFile(fileStream);
+			int packetCount = 0;
+			for (const QByteArray& packet : packets)
+			{
+				console.putData(packet);
+				port.write(packet);
 			}
+			// end test
+
+			port.write(createEnqFrame());
+			state = 3; // trying to write while idling, good to bid for line.
 			break;
 		}
 		case 2: // receive
@@ -419,8 +429,9 @@ void QtTerminal::writeFile(QString fileName)
 		}
 		case 3: // bid for line
 		{
-			// check for ACK
-			// move to state send
+			console.putData("Bidding state");
+
+			port.write(createEnqFrame());
 			break;
 		}
 		case 4: // send
